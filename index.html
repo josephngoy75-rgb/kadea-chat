@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
+        <title>Document</title>
+    </head>
+    <body>
+        <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+            <div class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto w-full">
+                
+                <div class="flex items-center gap-3">
+                    <img src="icons/Kadea Chat Logo.png" alt="Logo" class="w-9 h-9 object-contain">
+                    <span class="text-xl font-extrabold text-blue-700 tracking-tight">Kadea Chat</span>
+                </div>
+
+                <div class="flex items-center gap-6">
+            
+                    <button id="darkModeBtn" class="hover:opacity-70 transition">
+                        <img src="icons/circum_dark.png" alt="Mode sombre" class="w-7 h-7"> 
+                    </button>
+                    <a href="register.html" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
+                        Inscription
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="pt-24"></div>  
+        
+        <main class="max-w-7xl mx-auto px-8 pt-6 pb-6"> 
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                
+                <!-- COLONNE GAUCHE : TEXTE -->
+                <div class="flex flex-col items-start space-y-8">
+                
+                    <h1 class="text-5xl md:text-6xl font-extrabold text-[#0052cc] leading-[1.1] tracking-tight ">
+                        Un espace pour <br> des échanges <br>  entre apprenants.
+                    </h1>
+
+                    <p class="text-lg text-slate-500 font-medium leading-relaxed max-w-md">
+                        Kadea Chat vous permet de collaborer avec vos pairs, de partager vos connaissances et de grandir ensemble au sein de votre communauté numérique.
+                    </p>
+
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <!-- Se connecter -->
+                        <a href="login.html" class="bg-[#444956] text-white px-7 py-3 rounded-xl font-bold hover:bg-slate-800 transition shadow-md shadow-slate-200">
+                            Se connecter
+                        </a>
+                        
+                        <!-- Inscription -->
+                        <a href="register.html" class="bg-[#0052cc] text-white px-7 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
+                            Inscription
+                        </a>
+                    </div>
+                </div>
+
+                <!-- COLONNE DROITE : L'IMAGE -->
+                <div class="flex justify-end lg:pl-12">
+                    <img src="imgs/Capture-1.png" alt="Aperçu Kadea Chat" 
+                        class="w-full h-auto rounded-2xl shadow-2xl border border-slate-50 transform hover:scale-[1.02] transition-transform duration-500">
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
