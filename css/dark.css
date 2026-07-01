@@ -1,0 +1,18 @@
+/* Styles pour le mode sombre */
+body.dark {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+body.dark header {
+    background-color: rgba(26, 26, 26, 0.8);
+    border-color: #333;
+}
+
+body.dark main h1 {
+    color: #4d94ff; /* Un bleu plus clair pour le mode sombre */
+}
+
+body.dark p {
+    color: #a0aec0;
+}

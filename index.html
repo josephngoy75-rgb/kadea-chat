@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-        <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
+        <link rel="stylesheet" href="css/dark.css">
         <title>Kadea Chat - Accueil</title>
     </head>
     <body>
@@ -21,7 +21,7 @@
                     <button id="darkModeBtn" class="hover:opacity-70 transition">
                         <img src="icons/circum_dark.png" alt="Mode sombre" class="w-7 h-7"> 
                     </button>
-                    <a href="register.html" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
+                    <a href="register.html" id="data-i18n" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
                         Inscription
                     </a>
                 </div>
@@ -36,22 +36,22 @@
                 <!-- COLONNE GAUCHE : TEXTE -->
                 <div class="flex flex-col items-start space-y-8">
                 
-                    <h1 class="text-5xl md:text-6xl font-extrabold text-[#0052cc] leading-[1.1] tracking-tight ">
+                    <h1 id="data-i18n" class="text-5xl md:text-6xl font-extrabold text-[#0052cc] leading-[1.1] tracking-tight ">
                         Un espace pour <br> des échanges <br>  entre apprenants.
                     </h1>
 
-                    <p class="text-lg text-slate-500 font-medium leading-relaxed max-w-md">
+                    <p id="data-i18n" class="text-lg text-slate-500 font-medium leading-relaxed max-w-md">
                         Kadea Chat vous permet de collaborer avec vos pairs, de partager vos connaissances et de grandir ensemble au sein de votre communauté numérique.
                     </p>
 
                     <div class="flex flex-wrap gap-4 pt-2">
                         <!-- Se connecter -->
-                        <a href="login.html" class="bg-[#444956] text-white px-7 py-3 rounded-xl font-bold hover:bg-slate-800 transition shadow-md shadow-slate-200">
+                        <a href="login.html" id="data-i18n" class="bg-[#444956] text-white px-7 py-3 rounded-xl font-bold hover:bg-slate-800 transition shadow-md shadow-slate-200">
                             Se connecter
                         </a>
                         
                         <!-- Inscription -->
-                        <a href="register.html" class="bg-[#0052cc] text-white px-7 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
+                        <a href="register.html" id="data-i18n" class="bg-[#0052cc] text-white px-7 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
                             Inscription
                         </a>
                     </div>
@@ -70,7 +70,7 @@
                 
                 <div class="relative flex items-center">
                     <select id="language-select" class="appearance-none bg-transparent border border-slate-300 pl-3 pr-8 py-1 rounded text-[12px] font-medium text-slate-600 outline-none cursor-pointer hover:border-slate-400 transition-all">
-                        <option>français</option>
+                        <option id="data-i18n">français</option>
                         <option>anglais</option>
                     </select>
                     <!-- Flèche cliquable -->
