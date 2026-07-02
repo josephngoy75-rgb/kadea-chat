@@ -1,80 +1,116 @@
-// fetch("https://kadea-chat-api.onrender.com/workspaces", {
-//   method: "GET",
-//   headers: {
-//     "x-api-key": "wksp_4dfecb20c70ac622983ae8356d95ff8a"
-//   }
-// })
-// .then(res => res.json())
-// .then(console.log);
+const API_URL = 'https://kadea-chat-api.onrender.com/auth/register';
+const API_KEY = 'wksp_4dfecb20c70ac622983ae8356d95ff8a';
 
-// On récupère les éléments du DOM
-const registerForm = document.getElementById('registerForm');
-const errorMessage = document.getElementById('errorMessage');
+// --- 2. SÉLECTEURS UI ---
+const UI = {
+    form: document.getElementById('registerForm'),
+    error: document.getElementById('errorMessage'),
+    button: document.getElementById('submitBtn'),
+    inputs: {
+        name: document.getElementById('fullname'),
+        email: document.getElementById('email'),
+        pass: document.getElementById('password'),
+        confirm: document.getElementById('confirmPassword')
+    },
+    toggles: {
+        pass: document.getElementById('togglePass'), 
+        confirm: document.getElementById('toggleConfirm') 
+    }
+};
 
-// On écoute la soumission du formulaire
-registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault(); // On empêche la page de se recharger
+const validateForm = (data) => {
+    if (!data.fullName || !data.email || !data.password) return "Veuillez remplir tous les champs.";
+    if (data.password !== data.confirmPassword) return "Les mots de passe ne correspondent pas.";
+    if (data.password.length < 6) return "Le mot de passe est trop court (min 6).";
+    return null;
+};
 
-    // 1. RÉCUPÉRATION DES VALEURS
-    const fullName = document.getElementById('fullname').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+//  SERVICES API 
+const registerUser = async (userData) => {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+        body: JSON.stringify(userData)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Erreur lors de l'inscription");
+    return data;
+};
 
-    // 2. VALIDATIONS (Cahier des charges point 1)
-    errorMessage.classList.add('hidden'); // On cache l'erreur au début
-    errorMessage.textContent = "";
 
-    if (!fullName || !email || !password || !confirmPassword) {
-        showError("Veuillez remplir tous les champs.");
+const displayStatus = (msg, isSuccess = false) => {
+    if (!msg) {
+        UI.error.classList.add('hidden');
         return;
     }
-
-    if (password !== confirmPassword) {
-        showError("Les mots de passe ne correspondent pas.");
-        return;
-    }
-
-    if (password.length < 6) {
-        showError("Le mot de passe doit faire au moins 6 caractères.");
-        return;
-    }
-
-    // 3. APPEL API (Cahier des charges point 4)
-    try {
-        const response = await fetch('https://kadea-chat-api.onrender.com/auth/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            
-                'x-api-key': 'wksp_4dfecb20c70ac622983ae8356d95ff8a' 
-            },
-            body: JSON.stringify({
-                fullName: fullName,
-                email: email,
-                password: password
-            })
-        });
-
-        const data = await response.json();
+    UI.error.textContent = (isSuccess ? "✅ " : "⚠️ ") + msg;
+    UI.error.classList.remove('hidden');
     
-        if (response.ok) {
-            // SUCCÈS
+    UI.error.className = isSuccess 
+        ? "bg-green-50 text-green-600 p-3 rounded-xl text-xs mb-4 border border-green-100 text-center font-bold"
+        : "bg-red-50 text-red-600 p-3 rounded-xl text-xs mb-4 border border-red-100 text-center";
+};
+
+const setLoading = (state) => {
+    UI.button.disabled = state;
+    UI.button.innerHTML = state ? '<i class="fas fa-spinner fa-spin"></i> Traitement...' : "Create Account";
+    UI.button.style.opacity = state ? "0.7" : "1";
+};
+
+/**
+ * Alterne entre type 'password' et 'text'
+ */
+const toggleVisibility = (inputElement, iconElement) => {
+    const isPassword = inputElement.type === 'password';
+    inputElement.type = isPassword ? 'text' : 'password';
+    // Change l'icône (œil barré ou non)
+    const icon = iconElement.querySelector('i');
+    icon.classList.toggle('fa-eye');
+    icon.classList.toggle('fa-eye-slash');
+};
+
+// GESTIONNAIRES D'ÉVÉNEMENTS 
+
+// Soumission du formulaire
+const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const formData = {
+        fullName: UI.inputs.name.value.trim(),
+        email: UI.inputs.email.value.trim(),
+        password: UI.inputs.pass.value,
+        confirmPassword: UI.inputs.confirm.value
+    };
+
+    const errorValidation = validateForm(formData);
+    if (errorValidation) return displayStatus(errorValidation);
+
+    try {
+        setLoading(true);
+        displayStatus(null); 
+
+        await registerUser(formData);
         
+        // FeedBack Succès Vert
+        displayStatus("Compte créé avec succès ! Redirection...", true);
+        
+        setTimeout(() => {
             window.location.href = 'login.html';
-        } else {
-            // ERREUR SERVEUR (Email déjà utilisé, etc.)
-            showError(data.message || "L'inscription a échoué.");
+        }, 2000); // 2 secondes pour lire le message
+
+    } catch (err) {
+        displayStatus(err.message);
+    } finally {
+        if (window.location.pathname.includes('register.html')) {
+            setLoading(false);
         }
-
-    } catch (error) {
-        // ERREUR RÉSEAU (Pas d'internet, serveur en panne)
-        showError("Impossible de contacter le serveur. Vérifiez votre connexion.");
     }
-});
+};
 
-// Petite fonction pour afficher l'erreur proprement
-function showError(message) {
-    errorMessage.textContent = "⚠️ " + message;
-    errorMessage.classList.remove('hidden');
-}
+// INITIALISATION 
+
+UI.form.addEventListener('submit', handleSubmit);
+
+// Événements pour les yeux (Afficher/Masquer)
+UI.toggles.pass.addEventListener('click', () => toggleVisibility(UI.inputs.pass, UI.toggles.pass));
+UI.toggles.confirm.addEventListener('click', () => toggleVisibility(UI.inputs.confirm, UI.toggles.confirm));

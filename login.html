@@ -10,33 +10,34 @@
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-md">
-        <!-- Logo -->
-        <div class="flex flex-col items-center mb-6">
-            <img src="icons/Kadea Chat Logo.png" alt="Logo Kadea Chat" class="w-12 h-12 object-contain mb-2">
-            <h2 class="text-xl font-extrabold text-blue-700 tracking-tight">Kadea Chat</h2>
+        <!-- Section Logo et Titre (En dehors de la carte pour coller à la maquette) -->
+        <div class="flex flex-col items-center mb-10">
+            <!-- Logo icône bleue -->
+            <div class="bg-blue-600 p-2.5 rounded-xl shadow-lg mb-4">
+                <i class="fa-solid fa-comment-dots text-white text-2xl"></i>
+            </div>
+            
+            <!-- TITRE BIEN BLEU ET BIEN CENTRÉ -->
+            <h1 class="text-3xl font-extrabold text-[#0052cc] tracking-tight">Welcome back</h1>
+            <p class="text-slate-500 text-sm mt-2 font-medium">Please enter your details to sign in to Kadea Chat</p>
         </div>
 
-        <!-- Carte Login -->
-        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+        <!-- Carte Login avec bords très arrondis -->
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
             
-            <div class="mb-6">
-                <h1 class="text-2xl font-bold text-slate-800">Welcome back</h1>
-                <p class="text-slate-400 text-sm mt-1 font-medium">Please enter your details to sign in to Kadea Chat</p>
-            </div>
-
             <!-- Message d'erreur -->
             <div id="errorMessage" class="hidden bg-red-50 text-red-600 p-3 rounded-xl text-xs mb-4 border border-red-100 text-center"></div>
 
-            <form id="loginForm" class="space-y-4">
-                <!-- Email -->
+            <form id="loginForm" class="space-y-6">
+                <!-- Email Address -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1">Email Address</label>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1 uppercase tracking-wide">Email Address</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                             <i class="fa-regular fa-envelope text-sm"></i>
                         </span>
                         <input type="email" id="email" required
-                            class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300"
+                            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300"
                             placeholder="name@company.com">
                     </div>
                 </div>
@@ -44,7 +45,7 @@
                 <!-- Password -->
                 <div>
                     <div class="flex justify-between items-center mb-2 ml-1">
-                        <label class="block text-xs font-bold text-slate-500">Password</label>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide">Password</label>
                         <a href="#" class="text-[10px] font-bold text-blue-600 hover:underline">Forgot?</a>
                     </div>
                     <div class="relative">
@@ -52,34 +53,34 @@
                             <i class="fa-solid fa-lock text-sm"></i>
                         </span>
                         <input type="password" id="password" required
-                            class="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300"
+                            class="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300"
                             placeholder="••••••••">
-                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400">
+                        <button type="button" id="toggleLoginPass" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400">
                             <i class="fa-regular fa-eye text-sm"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Remember Me -->
+                <!-- Keep me signed in -->
                 <div class="flex items-center ml-1">
-                    <input type="checkbox" id="remember" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                    <label for="remember" class="ml-2 text-xs text-slate-500 font-medium">Keep me signed in</label>
+                    <input type="checkbox" id="remember" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                    <label for="remember" class="ml-2 text-xs text-slate-500 font-semibold cursor-pointer">Keep me signed in</label>
                 </div>
 
                 <!-- Login Button -->
                 <button type="submit" id="loginBtn"
-                    class="w-full bg-blue-600 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-[0.98] transition-all">
+                    class="w-full bg-[#1d4ed8] text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-800 active:scale-[0.98] transition-all text-lg">
                     Login
                 </button>
             </form>
         </div>
 
         <!-- Footer Link -->
-        <p class="mt-6 text-center text-sm text-slate-600 font-medium">
+        <p class="mt-8 text-center text-sm text-slate-600 font-medium">
             Don't have an account? <a href="register.html" class="font-bold text-blue-600 hover:underline">Create Account</a>
         </p>
     </div>
 
-    <script type="module" src="js/login.js"></script>
+    <script type="module" src="js/auth/login.js"></script>
 </body>
 </html>
