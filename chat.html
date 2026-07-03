@@ -1,116 +1,233 @@
 <!DOCTYPE html>
 <html lang="fr">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <title>Kadea Chat - Messagerie</title>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            body { font-family: 'Inter', sans-serif; }
-            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-            .custom-scrollbar::-webkit-scrollbar-thumb { background: #f1f1f1; border-radius: 10px; }
-        </style>
-    </head>
-    
-    <body class="bg-[#F8FAFC] h-screen flex overflow-hidden text-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Kadea Chat - Messagerie</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+    <body class="bg-white h-screen flex overflow-hidden text-slate-900">
 
-        <!-- 1. BARRE D'ICÔNES (EXTRÊME GAUCHE) -->
-        <aside class="w-[68px] flex flex-col items-center py-6 border-r border-slate-200 bg-white flex-shrink-0">
-            <div class="space-y-7 flex flex-col items-center flex-1">
-                <div class="text-blue-600 text-2xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
-                <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100 cursor-pointer">
-                    <i class="fa-solid fa-message text-sm"></i>
+        <!-- ==========================================
+            PARTIE 1 : BARRE D'ICÔNES (EXTRÊME GAUCHE)
+            ========================================== -->
+        <aside class="w-16 flex flex-col items-center py-5 border-r border-slate-100 bg-white flex-shrink-0">
+            
+            <!-- 1. Logo / Brand (Haut) -->
+            <div class="mb-8">
+                <div class="text-blue-600 text-lg">
+                    <i class="fa-solid fa-comment-dots"></i>
                 </div>
-                <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
-                <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-user-group"></i></div>
-                <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-box-archive"></i></div>
             </div>
-            <div id="gear-btn" class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg mb-2">
-                <i class="fa-solid fa-gear"></i>
+
+            <!-- 2. Navigation (Milieu) -->
+            <div class="flex flex-col items-center space-y-6 flex-1 w-full">
+                
+                <!-- Icône Message Active (Plus petite et fine) -->
+                <div class="relative group">
+                    <div class="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-md shadow-blue-100 cursor-pointer">
+                        <i class="fa-solid fa-message text-[14px]"></i>
+                    </div>
+                    <!-- Petite barre de sélection à gauche (détail maquette) -->
+                    <div class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-600 rounded-r-full"></div>
+                </div>
+
+                <!-- Téléphone -->
+                <div class="text-slate-300 hover:text-blue-500 cursor-pointer transition-all duration-300">
+                    <i class="fa-solid fa-phone text-[16px]"></i>
+                </div>
+
+                <!-- Utilisateurs -->
+                <div class="text-slate-300 hover:text-blue-500 cursor-pointer transition-all duration-300">
+                    <i class="fa-regular fa-user text-[17px]"></i>
+                </div>
+
+                <!-- Dossier / Archive -->
+                <div class="text-slate-300 hover:text-blue-500 cursor-pointer transition-all duration-300">
+                    <i class="fa-solid fa-box-archive text-[16px]"></i>
+                </div>
+
             </div>
+
+            <!-- 3. Paramètres (Bas) -->
+            <div id="gear-btn" class="text-slate-300 hover:text-blue-500 cursor-pointer transition-all duration-300 mb-2">
+                <i class="fa-solid fa-gear text-[17px]"></i>
+            </div>
+
         </aside>
 
-        <!-- 2. SIDEBAR CONVERSATIONS (MILIEU) -->
-        <aside class="w-72 border-r border-slate-200 flex flex-col flex-shrink-0 bg-white">
-            <!-- Header User -->
-            <div class="p-4 flex justify-between items-center">
-                <div class="flex items-center gap-2.5">
-                    <div class="relative">
-                        <img id="user-avatar-img" src="https://i.pravatar.cc/100?u=blank" class="w-9 h-9 rounded-full border border-slate-100 object-cover">
-                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
-                    </div>
-                    <div>
-                        <h3 id="user-fullname-display" class="font-bold text-slate-800 text-[12px]">Chargement...</h3>
-                        <p class="text-[9px] text-slate-400 font-medium uppercase tracking-tight">Status: Active</p>
-                    </div>
-                </div>
-                <button class="text-slate-300 hover:text-blue-600"><i class="fa-regular fa-pen-to-square"></i></button>
-            </div>
+                <!-- ==========================================
+            PARTIE 2 : SIDEBAR DES DISCUSSIONS (MILIEU)
+            ========================================== -->
+        <aside class="w-80 border-r border-slate-100 flex flex-col flex-shrink-0 bg-white">
 
-            <!-- Recherche -->
-            <div class="px-4 mb-3">
-                <div class="relative">
-                    <i id="search-btn" class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs cursor-pointer"></i>
-                    <input type="text" id="search-input" placeholder="Search conversations..." 
-                        class="w-full bg-slate-50 border-none rounded-lg py-2 pl-9 pr-4 text-[11px] outline-none focus:ring-1 focus:ring-blue-100 placeholder:text-slate-400">
-                </div>
-            </div>
-
-            <!-- Liste des conversations -->
-            <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar">
-                <!-- Sera vidé et rempli par JS -->
-            </div>
-        </aside>
-
-        <!-- 3. ZONE DE CHAT (DROITE) -->
-        <main class="flex-1 flex flex-col bg-white">
-            <!-- Header Chat -->
-            <header class="p-3 border-b border-slate-100 flex justify-between items-center bg-white h-[65px]">
+            <!-- 1. Header Utilisateur (Haut) -->
+            <div class="p-5 flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <div id="chat-contact-avatar" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px]">
-                        <span id="contact-initials">?</span>
+                    <!-- Ton Avatar -->
+                    <div class="relative">
+                        <img id="user-avatar-img" src="https://i.pravatar.cc/100?u=joseph" class="w-10 h-10 rounded-full border border-slate-100 object-cover">
+                        <!-- Point Vert Online -->
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
                     </div>
+                    <!-- Ton Nom -->
                     <div>
-                        <h3 id="chat-contact-name" class="font-bold text-slate-800 text-xs">Sélectionnez un contact</h3>
-                        <div class="flex items-center gap-1.5">
-                            <span id="online-dot" class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
-                            <span id="chat-contact-status" class="text-[9px] text-slate-400 font-medium">Cliquez à gauche</span>
+                        <h3 id="user-fullname-display" class="font-bold text-slate-800 text-[13px]">Joseph Ngoy</h3>
+                        <p class="text-[10px] text-slate-400 font-medium">My Status: <span class="text-green-500">Active</span></p>
+                    </div>
+                </div>
+                <!-- Icône "Nouveau Message" (Petit carré avec crayon) -->
+                <div class="text-slate-400 hover:text-blue-600 cursor-pointer transition-colors">
+                    <i class="fa-regular fa-pen-to-square text-[16px]"></i>
+                </div>
+            </div>
+
+            <!-- 2. Barre de Recherche (Inspirée Messenger) -->
+            <div class="px-5 mb-4">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-[12px]"></i>
+                    <input type="text" id="search-input" placeholder="Search conversations..." 
+                        class="w-full bg-slate-50 border-none rounded-xl py-2.5 pl-10 pr-4 text-[12px] outline-none focus:ring-1 focus:ring-blue-100 placeholder:text-slate-400 transition-all">
+                </div>
+            </div>
+
+            <!-- 3. Liste des Conversations (Conteneur avec Scroll) -->
+            <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar">
+                
+                <!-- EXEMPLE 1 : Item Actif (Sélectionné) -->
+                <div class="flex items-center gap-3 px-5 py-4 bg-slate-50 border-l-4 border-blue-600 cursor-pointer group">
+                    <img src="https://i.pravatar.cc/100?u=sarah" class="w-12 h-12 rounded-full object-cover">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-0.5">
+                            <h4 class="font-bold text-slate-800 text-[13px] truncate">Sarah Connor</h4>
+                            <span class="text-[10px] text-blue-600 font-bold">14:20</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-[12px] text-slate-500 truncate pr-2">Yeah, that sounds like a great plan!</p>
+                            <!-- Badge Notification -->
+                            <span class="bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">2</span>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-5 text-slate-300 mr-2">
-                    <i class="fa-solid fa-video hover:text-blue-500 cursor-pointer text-sm"></i>
-                    <i class="fa-solid fa-phone hover:text-blue-500 cursor-pointer text-sm"></i>
-                    <i class="fa-solid fa-ellipsis-vertical hover:text-blue-500 cursor-pointer text-sm"></i>
+
+                <!-- EXEMPLE 2 : Item Normal (Non lu) -->
+                <div class="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-[12px]">JD</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-0.5">
+                            <h4 class="font-bold text-slate-800 text-[13px] truncate">John Doe</h4>
+                            <span class="text-[10px] text-slate-400">Yesterday</span>
+                        </div>
+                        <p class="text-[12px] text-slate-500 truncate">Can you send me those files again?</p>
+                    </div>
+                </div>
+
+                <!-- EXEMPLE 3 : Autre Item -->
+                <div class="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50">
+                    <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-[12px]">ML</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline mb-0.5">
+                            <h4 class="font-bold text-slate-800 text-[13px] truncate">Maria Lopez</h4>
+                            <span class="text-[10px] text-slate-400">Tuesday</span>
+                        </div>
+                        <p class="text-[12px] text-slate-500 truncate font-medium">The project deadline has been moved.</p>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+                <!-- ==========================================
+            PARTIE 3 : FENÊTRE DE CHAT (DROITE)
+            ========================================== -->
+        <main class="flex-1 flex flex-col bg-white">
+
+            <!-- 1. Header du Chat Actif -->
+            <header class="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
+                <div class="flex items-center gap-3">
+                    <!-- Avatar du contact -->
+                    <div class="relative">
+                        <img src="https://i.pravatar.cc/100?u=sarah" class="w-10 h-10 rounded-full object-cover">
+                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                    </div>
+                    <!-- Infos contact -->
+                    <div>
+                        <h3 id="chat-contact-name" class="font-bold text-slate-800 text-[13px]">Sarah Connor</h3>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                            <span class="text-[10px] text-slate-400 font-medium">Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions (Vidéo, Appel, Options) -->
+                <div class="flex items-center gap-6 text-slate-400 mr-2">
+                    <i class="fa-solid fa-video hover:text-blue-600 cursor-pointer text-[16px] transition-colors"></i>
+                    <i class="fa-solid fa-phone hover:text-blue-600 cursor-pointer text-[16px] transition-colors"></i>
+                    <i class="fa-solid fa-ellipsis-vertical hover:text-blue-600 cursor-pointer text-[16px] transition-colors"></i>
                 </div>
             </header>
 
-            <!-- Messages -->
-            <div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-5 bg-white custom-scrollbar">
-                <div class="h-full flex flex-col items-center justify-center text-slate-200">
-                    <i class="fa-regular fa-comments text-4xl mb-2 opacity-20"></i>
-                    <p class="text-[11px]">Vos messages apparaîtront ici</p>
+            <!-- 2. Zone des Messages (Scrollable) -->
+            <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-6 bg-white custom-scrollbar">
+                
+                <!-- Séparateur de date -->
+                <div class="flex justify-center mb-4">
+                    <span class="bg-slate-100 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Today</span>
                 </div>
+
+                <!-- Message REÇU (Gris) -->
+                <div class="max-w-[70%] space-y-1">
+                    <div class="bg-slate-100 p-4 rounded-2xl rounded-tl-none">
+                        <p class="text-[13px] text-slate-700 leading-relaxed">Hey Alex! Did you manage to look at the designs I sent over last night?</p>
+                    </div>
+                    <span class="text-[10px] text-slate-400 block px-1">14:02</span>
+                </div>
+
+                <!-- Message ENVOYÉ (Bleu) -->
+                <div class="max-w-[70%] ml-auto space-y-1">
+                    <div class="bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm shadow-blue-100">
+                        <p class="text-[13px] leading-relaxed">Hey Sarah! Yes, I just finished reviewing them. They look incredible!</p>
+                    </div>
+                    <span class="text-[10px] text-slate-400 block text-right px-1">14:05</span>
+                </div>
+
+                <!-- Autre message envoyé -->
+                <div class="max-w-[70%] ml-auto space-y-1">
+                    <div class="bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm shadow-blue-100">
+                        <p class="text-[13px] leading-relaxed">The new color palette really makes the dashboard pop. I think the team will love it.</p>
+                    </div>
+                    <span class="text-[10px] text-slate-400 block text-right px-1">14:06</span>
+                </div>
+
             </div>
 
-            <!-- Zone Saisie -->
+            <!-- 3. Zone de Saisie (Bas) -->
             <div class="p-4 bg-white">
-                <div class="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                    <div class="flex items-center gap-3 pl-2 text-slate-300">
-                        <i class="fa-solid fa-circle-plus text-lg hover:text-blue-500 cursor-pointer"></i>
-                        <i class="fa-regular fa-face-smile text-lg hover:text-blue-500 cursor-pointer"></i>
+                <div class="flex items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                    <!-- Icônes d'action gauche -->
+                    <div class="flex items-center gap-3 pl-2 text-slate-400">
+                        <i class="fa-solid fa-circle-plus text-[20px] hover:text-blue-600 cursor-pointer transition-colors"></i>
+                        <i class="fa-regular fa-face-smile text-[20px] hover:text-blue-600 cursor-pointer transition-colors"></i>
                     </div>
+                    
+                    <!-- Input de texte -->
                     <input type="text" id="message-input" placeholder="Type a message..." 
-                        class="flex-1 bg-transparent border-none text-[12px] outline-none focus:ring-0 px-1">
-                    <button id="send-btn" class="bg-blue-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg shadow-blue-100 hover:bg-blue-700 transition active:scale-90">
-                        <i class="fa-solid fa-paper-plane text-[11px]"></i>
+                        class="flex-1 bg-transparent border-none text-[13px] outline-none focus:ring-0 placeholder:text-slate-400">
+                    
+                    <!-- Bouton Envoyer (Avion) -->
+                    <button id="send-btn" class="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95">
+                        <i class="fa-solid fa-paper-plane text-[14px]"></i>
                     </button>
                 </div>
             </div>
+
         </main>
 
-        <script type="module" src="js/chat.js"></script>
     </body>
 </html>
