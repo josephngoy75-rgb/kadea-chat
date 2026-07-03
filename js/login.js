@@ -29,20 +29,25 @@ const handleSubmit = async (e) => {
         password: UI.pass.value
     };
 
-    try {
+try {
         setLoading(true);
         displayStatus(null);
 
         const result = await loginUser(credentials);
         
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
+        // On vérifie si result.data existe pour éviter de faire planter l'app
+        if (result.data && result.data.token) {
+            localStorage.setItem('token', result.data.token);
+            localStorage.setItem('user', JSON.stringify(result.data.user));
 
-        // 2. Feedback et Redirection
-        displayStatus("Connexion réussie ! Ravie de vous revoir.", true);
-        setTimeout(() => {
-            window.location.href = 'chat.html';
-        }, 1500);
+            displayStatus("Connexion réussie ! Ravie de vous revoir.", true);
+            
+            setTimeout(() => {
+                window.location.href = 'chat.html';
+            }, 1500);
+        } else {
+            throw new Error("Le serveur n'a pas renvoyé de données valides.");
+        }
 
     } catch (err) {
         displayStatus(err.message);
@@ -74,3 +79,4 @@ UI.toggle.addEventListener('click', () => {
 });
 
 UI.form.addEventListener('submit', handleSubmit);
+

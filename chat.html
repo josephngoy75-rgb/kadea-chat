@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <title>Kadea Chat - Messagerie</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            body { font-family: 'Inter', sans-serif; }
+            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #f1f1f1; border-radius: 10px; }
+        </style>
+    </head>
+    
+    <body class="bg-[#F8FAFC] h-screen flex overflow-hidden text-slate-900">
+
+        <!-- 1. BARRE D'ICÔNES (EXTRÊME GAUCHE) -->
+        <aside class="w-[68px] flex flex-col items-center py-6 border-r border-slate-200 bg-white flex-shrink-0">
+            <div class="space-y-7 flex flex-col items-center flex-1">
+                <div class="text-blue-600 text-2xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
+                <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100 cursor-pointer">
+                    <i class="fa-solid fa-message text-sm"></i>
+                </div>
+                <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
+                <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-user-group"></i></div>
+                <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-box-archive"></i></div>
+            </div>
+            <div id="gear-btn" class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg mb-2">
+                <i class="fa-solid fa-gear"></i>
+            </div>
+        </aside>
+
+        <!-- 2. SIDEBAR CONVERSATIONS (MILIEU) -->
+        <aside class="w-72 border-r border-slate-200 flex flex-col flex-shrink-0 bg-white">
+            <!-- Header User -->
+            <div class="p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+                    <div class="relative">
+                        <img id="user-avatar-img" src="https://i.pravatar.cc/100?u=blank" class="w-9 h-9 rounded-full border border-slate-100 object-cover">
+                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                    </div>
+                    <div>
+                        <h3 id="user-fullname-display" class="font-bold text-slate-800 text-[12px]">Chargement...</h3>
+                        <p class="text-[9px] text-slate-400 font-medium uppercase tracking-tight">Status: Active</p>
+                    </div>
+                </div>
+                <button class="text-slate-300 hover:text-blue-600"><i class="fa-regular fa-pen-to-square"></i></button>
+            </div>
+
+            <!-- Recherche -->
+            <div class="px-4 mb-3">
+                <div class="relative">
+                    <i id="search-btn" class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs cursor-pointer"></i>
+                    <input type="text" id="search-input" placeholder="Search conversations..." 
+                        class="w-full bg-slate-50 border-none rounded-lg py-2 pl-9 pr-4 text-[11px] outline-none focus:ring-1 focus:ring-blue-100 placeholder:text-slate-400">
+                </div>
+            </div>
+
+            <!-- Liste des conversations -->
+            <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar">
+                <!-- Sera vidé et rempli par JS -->
+            </div>
+        </aside>
+
+        <!-- 3. ZONE DE CHAT (DROITE) -->
+        <main class="flex-1 flex flex-col bg-white">
+            <!-- Header Chat -->
+            <header class="p-3 border-b border-slate-100 flex justify-between items-center bg-white h-[65px]">
+                <div class="flex items-center gap-3">
+                    <div id="chat-contact-avatar" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px]">
+                        <span id="contact-initials">?</span>
+                    </div>
+                    <div>
+                        <h3 id="chat-contact-name" class="font-bold text-slate-800 text-xs">Sélectionnez un contact</h3>
+                        <div class="flex items-center gap-1.5">
+                            <span id="online-dot" class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
+                            <span id="chat-contact-status" class="text-[9px] text-slate-400 font-medium">Cliquez à gauche</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-5 text-slate-300 mr-2">
+                    <i class="fa-solid fa-video hover:text-blue-500 cursor-pointer text-sm"></i>
+                    <i class="fa-solid fa-phone hover:text-blue-500 cursor-pointer text-sm"></i>
+                    <i class="fa-solid fa-ellipsis-vertical hover:text-blue-500 cursor-pointer text-sm"></i>
+                </div>
+            </header>
+
+            <!-- Messages -->
+            <div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-5 bg-white custom-scrollbar">
+                <div class="h-full flex flex-col items-center justify-center text-slate-200">
+                    <i class="fa-regular fa-comments text-4xl mb-2 opacity-20"></i>
+                    <p class="text-[11px]">Vos messages apparaîtront ici</p>
+                </div>
+            </div>
+
+            <!-- Zone Saisie -->
+            <div class="p-4 bg-white">
+                <div class="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-3 pl-2 text-slate-300">
+                        <i class="fa-solid fa-circle-plus text-lg hover:text-blue-500 cursor-pointer"></i>
+                        <i class="fa-regular fa-face-smile text-lg hover:text-blue-500 cursor-pointer"></i>
+                    </div>
+                    <input type="text" id="message-input" placeholder="Type a message..." 
+                        class="flex-1 bg-transparent border-none text-[12px] outline-none focus:ring-0 px-1">
+                    <button id="send-btn" class="bg-blue-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg shadow-blue-100 hover:bg-blue-700 transition active:scale-90">
+                        <i class="fa-solid fa-paper-plane text-[11px]"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <script type="module" src="js/chat.js"></script>
+    </body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Kadea Chat - Profil</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; font-size: 13px; }
+    </style>
+</head>
+<body class="bg-white h-screen flex overflow-hidden">
+
+    <!-- 1. SIDEBAR (Plus étroite et compacte) -->
+    <aside class="w-14 flex flex-col items-center border-r border-slate-100 flex-shrink-0 relative">
+        <!-- Texte "forum" en haut -->
+        <div class="py-4">
+            <span class="text-[10px] font-bold text-blue-700 tracking-tighter">forum</span>
+        </div>
+
+        <!-- Icônes de navigation -->
+        <div class="flex flex-col items-center space-y-6 mt-4 flex-1 w-full">
+            <a href="chat.html" class="text-slate-400 text-lg hover:text-blue-600"><i class="fa-regular fa-comment-dots"></i></a>
+            <div class="text-slate-400 text-lg hover:text-blue-600 cursor-pointer"><i class="fa-solid fa-phone"></i></div>
+            <div class="text-slate-400 text-lg hover:text-blue-600 cursor-pointer"><i class="fa-solid fa-user"></i></div>
+            <div class="text-slate-400 text-lg hover:text-blue-600 cursor-pointer"><i class="fa-solid fa-box-archive"></i></div>
+            
+            <!-- Icône Gear active avec la petite barre bleue de sélection à gauche -->
+            <div class="text-blue-600 text-lg relative w-full flex justify-center py-2">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
+                <i class="fa-solid fa-gear"></i>
+            </div>
+        </div>
+
+        <!-- Bouton "+" bleu tout en bas -->
+        <div class="mb-6">
+            <button class="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-lg shadow-blue-200">
+                <i class="fa-solid fa-plus text-xs"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- 2. CONTENU PRINCIPAL -->
+    <main class="flex-1 flex flex-col bg-slate-50/30 overflow-y-auto">
+        <!-- Header réduit -->
+        <header class="px-6 py-3 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <h2 class="text-blue-700 font-bold text-base">Kadea Chat</h2>
+            <div class="flex gap-4 text-slate-400 text-sm">
+                <i class="fa-solid fa-video cursor-pointer"></i>
+                <i class="fa-solid fa-phone cursor-pointer"></i>
+                <i class="fa-solid fa-ellipsis-vertical cursor-pointer"></i>
+            </div>
+        </header>
+
+        <!-- Profil Content (Plus serré) -->
+        <div class="max-w-3xl mx-auto w-full py-6 px-4">
+            
+            <!-- Avatar réduit -->
+            <div class="flex flex-col items-center mb-6">
+                <div class="relative mb-3">
+                    <img id="user-avatar" src="https://i.pravatar.cc/150?u=joseph" class="w-24 h-24 rounded-full border-2 border-white shadow-sm">
+                    <span class="absolute bottom-2 right-2 w-5 h-5 bg-green-500 border-[3px] border-white rounded-full"></span>
+                </div>
+                <h1 id="profile-name" class="text-xl font-bold text-slate-800">Alex Rivera</h1>
+                <p id="profile-email" class="text-slate-400 text-xs">alex.rivera@example.com</p>
+                <span class="mt-2 bg-blue-50 text-blue-600 text-[9px] font-bold px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-widest">
+                   <i class="fa-solid fa-circle-check mr-1"></i> Member since October 2023
+                </span>
+            </div>
+
+            <!-- Grille des cartes (Padding réduit) -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                
+                <!-- Account Details -->
+                <div class="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-xs">Account Details</h3>
+                        <i class="fa-solid fa-id-card text-slate-200 text-xs"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[9px] uppercase font-bold text-slate-400 tracking-tighter">Username</p>
+                            <p id="detail-username" class="text-xs font-medium text-slate-600">arivera_chat</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] uppercase font-bold text-slate-400 tracking-tighter">Phone</p>
+                            <p id="detail-phone" class="text-xs font-medium text-slate-600">+1 (555) 012-3456</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] uppercase font-bold text-slate-400 tracking-tighter">Language</p>
+                            <p id="detail-lang" class="text-xs font-medium text-slate-600">English (US)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy & Security -->
+                <div class="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 text-xs">Privacy & Security</h3>
+                        <i class="fa-solid fa-lock text-slate-200 text-xs"></i>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                                <i class="fa-solid fa-shield-halved text-slate-400"></i> Two-Factor Auth
+                            </div>
+                            <span class="text-[9px] font-bold text-blue-600 uppercase">Enabled</span>
+                        </div>
+                        <div class="flex justify-between items-center cursor-pointer">
+                            <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                                <i class="fa-solid fa-eye text-slate-400"></i> Active Sessions
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-[9px] text-slate-300"></i>
+                        </div>
+                        <div class="flex justify-between items-center cursor-pointer">
+                            <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                                <i class="fa-solid fa-bell text-slate-400"></i> Alert Preferences
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-[9px] text-slate-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons d'actions plus petits -->
+            <div class="flex flex-col items-center space-y-3">
+                <button class="w-full max-w-xs bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-pen"></i> Edit Profile
+                </button>
+                <button class="w-full max-w-xs bg-slate-200/50 text-slate-600 py-2.5 rounded-lg font-bold hover:bg-slate-200 transition text-xs flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-key"></i> Change Password
+                </button>
+                
+                <button id="logout-btn" class="text-red-500 font-bold text-xs flex items-center gap-2 mt-2 hover:underline">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+
+            <p class="text-center text-slate-300 text-[9px] mt-8">
+                Kadea Chat v1.0.0 — Encryption Active
+            </p>
+        </div>
+    </main>
+
+    <script type="module" src="js/profile.js"></script>
+</body>
+</html>
