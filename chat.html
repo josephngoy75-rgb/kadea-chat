@@ -15,12 +15,12 @@
 </head>
 <body class="bg-[#F8FAFC] h-screen flex overflow-hidden text-slate-900">
 
-    <!-- PARTIE 1 : BARRE D'ICÔNES (TOUJOURS VISIBLE) -->
-    <aside class="w-[65px] flex flex-col items-center py-6 border-r border-slate-200 bg-white flex-shrink-0">
+    <!-- PARTIE 1 : BARRE D'ICÔNES (Visible uniquement sur PC) -->
+    <aside class="hidden md:flex w-[68px] flex-col items-center py-6 border-r border-slate-200 bg-white flex-shrink-0">
         <div class="space-y-7 flex flex-col items-center flex-1">
-            <div class="text-blue-600 text-xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
+            <div class="text-blue-600 text-2xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
             <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100 cursor-pointer">
-                <i class="fa-solid fa-message text-xs"></i>
+                <i class="fa-solid fa-message text-sm"></i>
             </div>
             <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
             <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-user-group"></i></div>
@@ -31,8 +31,8 @@
         </div>
     </aside>
 
-    <!-- PARTIE 2 : SIDEBAR DES DISCUSSIONS (Se cache sur mobile quand chat ouvert) -->
-    <aside id="sidebar-mid" class="flex-1 md:w-80 md:flex-none border-r border-slate-200 flex flex-col flex-shrink-0 bg-white">
+    <!-- PARTIE 2 : SIDEBAR DES DISCUSSIONS (Milieu) -->
+    <aside id="sidebar-mid" class="flex-1 md:w-80 md:flex-none border-r border-slate-200 flex flex-col flex-shrink-0 bg-white relative">
         <div class="p-4 flex justify-between items-center">
             <div class="flex items-center gap-2.5">
                 <div class="relative">
@@ -52,19 +52,37 @@
             </div>
         </div>
 
-        <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar"></div>
+        <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar pb-20 md:pb-0"></div>
+
+        <!-- BARRE DE NAVIGATION MOBILE (Fixe en bas - Style WhatsApp) -->
+        <nav id="mobile-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-center py-3 z-50">
+            <div class="flex flex-col items-center text-blue-600">
+                <i class="fa-solid fa-message text-xl"></i>
+                <span class="text-[10px] font-bold mt-1">Discussions</span>
+            </div>
+            <div class="flex flex-col items-center text-slate-400">
+                <i class="fa-solid fa-phone text-xl"></i>
+                <span class="text-[10px] mt-1">Appels</span>
+            </div>
+            <div class="flex flex-col items-center text-slate-400">
+                <!-- On remplace Communautés par notre icône Personne -->
+                <i class="fa-solid fa-user-group text-xl"></i>
+                <span class="text-[10px] mt-1">Utilisateurs</span>
+            </div>
+            <div id="gear-mobile" class="flex flex-col items-center text-slate-400 cursor-pointer">
+                <i class="fa-solid fa-gear text-xl"></i>
+                <span class="text-[10px] mt-1">Profil</span>
+            </div>
+        </nav>
     </aside>
 
-    <!-- PARTIE 3 : FENÊTRE DE CHAT (S'affiche sur mobile quand contact cliqué) -->
+    <!-- PARTIE 3 : FENÊTRE DE CHAT (Droite) -->
     <main id="chat-window" class="hidden md:flex flex-1 flex-col bg-white">
-        <!-- Header Chat -->
-        <header class="p-3 border-b border-slate-100 flex justify-between items-center h-[65px]">
+        <header class="p-3 border-b border-slate-100 flex justify-between items-center bg-white h-[65px]">
             <div class="flex items-center gap-3">
-                <!-- BOUTON RETOUR MOBILE -->
                 <button id="back-to-list" class="md:hidden text-blue-600 pr-2">
                     <i class="fa-solid fa-chevron-left text-xl"></i>
                 </button>
-
                 <div id="chat-contact-avatar" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px]">
                     <span id="contact-initials">?</span>
                 </div>
@@ -72,29 +90,19 @@
                     <h3 id="chat-contact-name" class="font-bold text-slate-800 text-xs">Sélectionnez un contact</h3>
                     <div class="flex items-center gap-1.5">
                         <span id="online-dot" class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
-                        <span id="chat-contact-status" class="text-[9px] text-slate-400">Cliquez à gauche</span>
+                        <span id="chat-contact-status" class="text-[9px] text-slate-400 font-medium">Cliquez à gauche</span>
                     </div>
                 </div>
-            </div>
-            <div class="flex items-center gap-5 text-slate-300 mr-2">
-                <i class="fa-solid fa-video text-sm"></i>
-                <i class="fa-solid fa-phone text-sm"></i>
-                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
             </div>
         </header>
 
         <div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-5 bg-white custom-scrollbar"></div>
 
-        <!-- Zone Saisie (Padding mobile corrigé) -->
-        <div class="p-4 pb-10 md:pb-4 bg-white border-t border-slate-50">
+        <div class="p-4 bg-white border-t border-slate-50">
             <div class="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                <div class="flex items-center gap-3 pl-2 text-slate-300">
-                    <i class="fa-solid fa-circle-plus text-lg cursor-pointer"></i>
-                    <i class="fa-regular fa-face-smile text-lg cursor-pointer"></i>
-                </div>
                 <input type="text" id="message-input" placeholder="Type a message..." 
-                       class="flex-1 bg-transparent border-none text-[12px] outline-none">
-                <button id="send-btn" class="bg-blue-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition">
+                       class="flex-1 bg-transparent border-none text-[12px] outline-none px-2">
+                <button id="send-btn" class="bg-blue-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-paper-plane text-[11px]"></i>
                 </button>
             </div>

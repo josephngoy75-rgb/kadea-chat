@@ -10,32 +10,34 @@ let activeConversationId = null;
 document.addEventListener('DOMContentLoaded', async () => {
     if (!TOKEN) { window.location.href = 'login.html'; return; }
 
-    // On attend d'abord Joseph (Important !)
     await loadUserProfile();
     await loadConversations();
 
     // Recherche
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim();
-            query ? triggerSearch(query) : loadConversations();
-        });
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        query ? triggerSearch(query) : loadConversations();
+    });
+
+    // Envoi
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+    });
+
+    // BOUTON RETOUR MOBILE
+    const backBtn = document.getElementById('back-to-list');
+    if (backBtn) {
+        backBtn.onclick = () => {
+            document.getElementById('sidebar-mid').classList.remove('hidden');
+            document.getElementById('chat-window').classList.add('hidden');
+            document.getElementById('chat-window').classList.remove('flex');
+            activeConversationId = null;
+        };
     }
 
-    // Boutons
-    const sendBtn = document.getElementById('send-btn');
-    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-
-    const msgInput = document.getElementById('message-input');
-    if (msgInput) {
-        msgInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-        });
-    }
-
-    const gearBtn = document.getElementById('gear-btn');
-    if (gearBtn) gearBtn.onclick = () => window.location.href = 'profile.html';
+    // Navigation Profil
+    document.getElementById('gear-btn').onclick = () => window.location.href = 'profile.html';
 
     // Refresh Auto
     setInterval(() => {
@@ -44,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 5000);
 });
 
-// --- 3. API RÉCUPÉRATION ---
+// --- 3. FONCTIONS API ---
 
 async function loadUserProfile() {
     try {
@@ -54,8 +56,7 @@ async function loadUserProfile() {
         const result = await response.json();
         if (response.ok && result.data?.user) {
             currentUser = result.data.user;
-            const display = document.getElementById('user-fullname-display');
-            if (display) display.textContent = currentUser.fullName;
+            document.getElementById('user-fullname-display').textContent = currentUser.fullName;
         }
     } catch (err) { console.error(err); }
 }
@@ -70,21 +71,39 @@ async function loadConversations() {
     } catch (err) { console.error(err); }
 }
 
+async function triggerSearch(query) {
+    try {
+        const response = await fetch(`${API_URL}/users`, {
+            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
+        });
+        const result = await response.json();
+        const users = result.data?.users || result.data || [];
+        const found = users.filter(u => 
+            (u.fullName || "").toLowerCase().includes(query.toLowerCase()) && 
+            String(u.id || u._id) !== String(currentUser.id)
+        );
+        displaySearchResults(found);
+    } catch (err) { console.error(err); }
+}
+
 // --- 4. ACTIONS ---
 
 window.openConversation = async function(convId, title) {
     if (!convId || convId === 'undefined') return;
     activeConversationId = convId;
+
+    // LOGIQUE MOBILE : Masquer liste, montrer chat
+    if (window.innerWidth < 768) {
+        document.getElementById('sidebar-mid').classList.add('hidden');
+        document.getElementById('chat-window').classList.remove('hidden');
+        document.getElementById('chat-window').classList.add('flex');
+    }
     
-    // SÉCURITÉ : On vérifie si les éléments existent avant de changer le texte
-    const nameElem = document.getElementById('chat-contact-name');
-    const initElem = document.getElementById('contact-initials');
-    
-    if (nameElem) nameElem.textContent = title;
-    if (initElem) initElem.textContent = String(title).substring(0, 2).toUpperCase();
+    document.getElementById('chat-contact-name').textContent = title;
+    document.getElementById('contact-initials').textContent = String(title).substring(0, 2).toUpperCase();
 
     const container = document.getElementById('messages-container');
-    if (container) container.innerHTML = '<div class="text-center text-[10px] text-slate-400 mt-10">Chargement...</div>';
+    container.innerHTML = '<div class="text-center text-[10px] text-slate-400 mt-10">Chargement...</div>';
 
     try {
         const response = await fetch(`${API_URL}/conversations/${convId}`, {
@@ -109,7 +128,7 @@ async function sendMessage() {
         const response = await fetch(`${API_URL}/conversations/${activeConversationId}/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
-            body: JSON.stringify({ content })
+            body: JSON.stringify({ content: content })
         });
         if (response.ok) {
             input.value = "";
@@ -131,49 +150,15 @@ async function silentRefreshMessages() {
     } catch (err) { console.error(err); }
 }
 
-// --- 5. RECHERCHE ---
-
-async function triggerSearch(query) {
-    try {
-        const response = await fetch(`${API_URL}/users`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
-        const users = result.data?.users || result.data || [];
-        const found = users.filter(u => 
-            (u.fullName || "").toLowerCase().includes(query.toLowerCase()) && 
-            String(u.id || u._id) !== String(currentUser.id || currentUser._id)
-        );
-        displaySearchResults(found);
-    } catch (err) { console.error(err); }
-}
-
-window.createNewConversation = async function(userId, userName) {
-    try {
-        const response = await fetch(`${API_URL}/conversations`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
-            body: JSON.stringify({ type: "private", participantIds: [userId] })
-        });
-        const result = await response.json();
-        if (response.ok) {
-            const id = result.data.id || result.data._id;
-            document.getElementById('search-input').value = "";
-            await loadConversations();
-            openConversation(id, userName);
-        }
-    } catch (err) { console.error(err); }
-}
-
-// --- 6. RENDU UI ---
+// --- 5. RENDU UI ---
 
 function renderConversations(conversations) {
     const container = document.getElementById('conversations-list');
     if (!container) return;
     container.innerHTML = ""; 
 
-    if (!conversations || conversations.length === 0) {
-        container.innerHTML = '<p class="p-8 text-center text-[10px] text-slate-300">Aucune conversation récente</p>';
+    if (conversations.length === 0) {
+        container.innerHTML = '<p class="p-8 text-center text-[10px] text-slate-300">Aucune discussion.</p>';
         return;
     }
 
@@ -193,34 +178,14 @@ function renderConversations(conversations) {
 
         container.insertAdjacentHTML('beforeend', `
             <div onclick="openConversation('${id}', '${safeTitle}')" 
-                 class="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 cursor-pointer transition border-b border-slate-50 ${isSelected ? 'bg-slate-50 border-l-4 border-blue-600' : ''}">
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
-                    ${String(nameToShow).substring(0, 2)}
-                </div>
+                 class="flex items-center gap-3 px-5 py-4 hover:bg-slate-50 cursor-pointer transition border-b border-slate-50 ${isSelected ? 'bg-slate-50 border-l-4 border-blue-600' : ''}">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">${String(nameToShow).substring(0, 2)}</div>
                 <div class="flex-1 min-w-0">
                     <h4 class="font-bold text-slate-800 text-[12px] truncate">${nameToShow}</h4>
-                    <p class="text-[11px] text-slate-400 truncate">${conv.lastMessage?.content || "Démarrer une discussion"}</p>
+                    <p class="text-[11px] text-slate-400 truncate">${conv.lastMessage?.content || "Nouvelle discussion"}</p>
                 </div>
             </div>`);
     });
-}
-
-function renderMessages(messages) {
-    const container = document.getElementById('messages-container');
-    if (!container) return;
-    const msgsArray = Array.isArray(messages) ? messages : (messages.messages || []);
-    
-    container.innerHTML = "";
-    msgsArray.forEach(msg => {
-        const isMe = String(msg.senderId) === String(currentUser.id || currentUser._id);
-        container.insertAdjacentHTML('beforeend', `
-            <div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2">
-                <div class="max-w-[75%] ${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none'} p-2.5 shadow-sm">
-                    <p class="text-[12px] leading-relaxed">${msg.content}</p>
-                </div>
-            </div>`);
-    });
-    container.scrollTop = container.scrollHeight;
 }
 
 function displaySearchResults(users) {
@@ -230,13 +195,45 @@ function displaySearchResults(users) {
         const name = u.fullName || "Utilisateur";
         const safeName = String(name).replace(/'/g, "\\'");
         container.insertAdjacentHTML('beforeend', `
-            <div onclick="createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50">
-                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
-                    ${String(name).substring(0,2)}
-                </div>
+            <div onclick="window.createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50">
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">${String(name).substring(0,2)}</div>
                 <h4 class="font-bold text-slate-800 text-[11px]">${name}</h4>
             </div>`);
     });
+}
+
+window.createNewConversation = async function(userId, userName) {
+    try {
+        const response = await fetch(`${API_URL}/conversations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
+            body: JSON.stringify({ type: "private", participantIds: [userId] })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            const id = result.data.id || result.data._id;
+            document.getElementById('search-input').value = "";
+            await loadConversations();
+            openConversation(id, userName);
+        }
+    } catch (err) { console.error(err); }
+}
+
+function renderMessages(messages) {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
+    const msgsArray = Array.isArray(messages) ? messages : (messages.messages || []);
+    container.innerHTML = "";
+    msgsArray.forEach(msg => {
+        const isMe = String(msg.senderId) === String(currentUser.id || currentUser._id);
+        container.insertAdjacentHTML('beforeend', `
+            <div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2">
+                <div class="${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none'} p-3 shadow-sm">
+                    <p class="text-[12px] leading-relaxed">${msg.content}</p>
+                </div>
+            </div>`);
+    });
+    container.scrollTop = container.scrollHeight;
 }
 
 function updateOnlineStatus(isOnline) {
