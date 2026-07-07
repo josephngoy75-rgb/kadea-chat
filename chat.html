@@ -18,17 +18,17 @@
 </head>
 <body class="bg-[#F8FAFC] h-screen flex overflow-hidden text-slate-900">
 
-    <!-- MODAL DE CONFIRMATION INTERNE (SUPPRESSION) -->
+    <!-- MODAL DE CONFIRMATION INTERNE -->
     <div id="delete-modal" class="hidden fixed inset-0 z-[110] bg-black/40 flex items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 modal-animate text-center">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash-can text-2xl"></i>
             </div>
             <h3 class="text-lg font-bold text-slate-800">Supprimer la discussion ?</h3>
-            <p class="text-sm text-slate-500 mt-2">Cette action est irréversible. Tous vos messages seront perdus.</p>
+            <p class="text-sm text-slate-500 mt-2">Cette action est irréversible.</p>
             <div class="flex gap-3 mt-6">
-                <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50 hover:bg-slate-100 transition">Annuler</button>
-                <button id="confirm-delete-btn" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-100 transition">Supprimer</button>
+                <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50">Annuler</button>
+                <button id="confirm-delete-btn" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 shadow-lg shadow-red-100">Supprimer</button>
             </div>
         </div>
     </div>
@@ -37,9 +37,9 @@
     <div id="mobile-context-menu" class="hidden fixed inset-0 z-[100] bg-black/20 flex items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs rounded-3xl shadow-2xl overflow-hidden modal-animate">
             <div class="p-4 border-b border-slate-50 text-center font-bold text-slate-800 text-sm" id="context-menu-title">Options</div>
-            <button id="archive-menu-btn" class="w-full p-4 text-left flex items-center gap-3 hover:bg-slate-50 border-b border-slate-50">
+            <a href="archiver.html" class="w-full p-4 text-left flex items-center gap-3 hover:bg-slate-50 border-b border-slate-50">
                 <i class="fa-solid fa-box-archive text-blue-500"></i> <span class="font-medium text-sm">Archiver</span>
-            </button>
+            </a>
             <button onclick="openDeleteModal()" class="w-full p-4 text-left flex items-center gap-3 hover:bg-red-50 text-red-500">
                 <i class="fa-solid fa-trash-can"></i> <span class="font-medium text-sm">Supprimer</span>
             </button>
@@ -47,19 +47,31 @@
         </div>
     </div>
 
-    <!-- BARRE GAUCHE (PC) -->
+    <!-- PARTIE 1 : BARRE D'ICÔNES (PC) -->
     <aside class="hidden md:flex w-[68px] flex-col items-center py-6 border-r border-slate-200 bg-white flex-shrink-0">
         <div class="space-y-7 flex flex-col items-center flex-1">
             <div class="text-blue-600 text-2xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
-            <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100 cursor-pointer"><i class="fa-solid fa-message text-sm"></i></div>
+            
+            <a href="chat.html" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100">
+                <i class="fa-solid fa-message text-sm"></i>
+            </a>
+            
             <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
-            <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-user-group"></i></div>
-            <a href="archiver.html" class="text-slate-300 hover:text-blue-600 text-lg"><i class="fa-solid fa-box-archive"></i></a>
+            
+            <!-- LIEN VERS USERS (COMMUNAUTÉ) -->
+            <a href="users.html" class="text-slate-300 hover:text-blue-600 text-lg transition-colors">
+                <i class="fa-solid fa-user-group"></i>
+            </a>
+
+            <!-- LIEN VERS ARCHIVER -->
+            <a href="archiver.html" class="text-slate-300 hover:text-blue-600 text-lg transition-colors">
+                <i class="fa-solid fa-box-archive"></i>
+            </a>
         </div>
-        <div id="gear-btn" class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg mb-2"><i class="fa-solid fa-gear"></i></div>
+        <a href="profile.html" class="text-slate-300 hover:text-blue-600 text-lg mb-2"><i class="fa-solid fa-gear"></i></a>
     </aside>
 
-    <!-- SIDEBAR DISCUSSIONS -->
+    <!-- PARTIE 2 : SIDEBAR DISCUSSIONS -->
     <aside id="sidebar-mid" class="flex-1 md:w-80 md:flex-none border-r border-slate-200 flex flex-col flex-shrink-0 bg-white relative">
         <div class="p-4 flex justify-between items-center">
             <div class="flex items-center gap-2.5">
@@ -76,15 +88,28 @@
         </div>
         <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar pb-20 md:pb-0 no-select"></div>
 
+        <!-- NAV MOBILE (STYLE WHATSAPP) -->
         <nav id="mobile-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-center py-3 z-50">
-            <div class="flex flex-col items-center text-blue-600"><i class="fa-solid fa-message text-xl"></i><span class="text-[10px] font-bold mt-1">Discussions</span></div>
+            <a href="chat.html" class="flex flex-col items-center text-blue-600">
+                <i class="fa-solid fa-message text-xl"></i>
+                <span class="text-[10px] font-bold mt-1">Discussions</span>
+            </a>
             <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-phone text-xl"></i><span class="text-[10px] mt-1">Appels</span></div>
-            <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-user-group text-xl"></i><span class="text-[10px] mt-1">Communautés</span></div>
-            <div id="gear-mobile" class="flex flex-col items-center text-slate-400 cursor-pointer"><i class="fa-solid fa-gear text-xl"></i><span class="text-[10px] mt-1">Réglages</span></div>
+            
+            <!-- LIEN VERS USERS MOBILE -->
+            <a href="users.html" class="flex flex-col items-center text-slate-400">
+                <i class="fa-solid fa-user-group text-xl"></i>
+                <span class="text-[10px] mt-1">Communauté</span>
+            </a>
+
+            <a href="profile.html" class="flex flex-col items-center text-slate-400">
+                <i class="fa-solid fa-gear text-xl"></i>
+                <span class="text-[10px] mt-1">Profil</span>
+            </a>
         </nav>
     </aside>
 
-    <!-- FENÊTRE DE CHAT -->
+    <!-- PARTIE 3 : FENÊTRE DE CHAT -->
     <main id="chat-window" class="hidden md:flex flex-1 flex-col bg-white">
         <header class="p-3 border-b border-slate-100 flex justify-between items-center bg-white h-[65px]">
             <div class="flex items-center gap-3">

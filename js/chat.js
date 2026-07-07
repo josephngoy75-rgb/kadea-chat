@@ -6,7 +6,7 @@ const TOKEN = localStorage.getItem('token');
 let currentUser = null;
 let activeConversationId = null;
 let pressTimer;
-let unreadMap = {}; // Pour suivre les nouveaux messages
+let unreadMap = {}; 
 
 // --- INITIALISATION ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -38,18 +38,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         activeConversationId = null;
     };
 
-    // Navigation
-    document.getElementById('gear-btn').onclick = () => window.location.href = 'profile.html';
-    document.getElementById('gear-mobile').onclick = () => window.location.href = 'profile.html';
-
-    // Refresh Auto (Polling)
+    // Refresh Auto
     setInterval(() => { 
         if (activeConversationId) silentRefreshMessages(); 
         loadConversations(); 
     }, 4000);
 });
 
-// --- API RÉCUPÉRATION ---
+// --- API ---
 
 async function loadUserProfile() {
     try {
@@ -60,6 +56,7 @@ async function loadUserProfile() {
         if (response.ok) {
             currentUser = result.data.user;
             document.getElementById('user-fullname-display').textContent = currentUser.fullName;
+            if(currentUser.avatarUrl) document.getElementById('user-avatar-img').src = currentUser.avatarUrl;
         }
     } catch (err) { console.error(err); }
 }
@@ -78,15 +75,13 @@ async function loadConversations() {
     } catch (err) { console.error(err); }
 }
 
-// --- LOGIQUE NOTIFICATION ---
 function updateUnreadStatus(conversations) {
     conversations.forEach(conv => {
         const id = conv.id || conv._id;
-        // Si le dernier message n'est pas de moi et que le chat n'est pas ouvert
         if (conv.lastMessage && String(conv.lastMessage.senderId) !== String(currentUser.id) && activeConversationId !== id) {
-            unreadMap[id] = 1; // On simule une notification
+            unreadMap[id] = 1;
         } else if (activeConversationId === id) {
-            unreadMap[id] = 0; // Lu si ouvert
+            unreadMap[id] = 0;
         }
     });
 }
@@ -100,13 +95,12 @@ function renderConversations(conversations) {
 
     conversations.forEach(conv => {
         const myId = String(currentUser.id || currentUser._id);
-        // LOGIQUE CORRIGÉE : On exclut systématiquement Joseph du titre
         const other = conv.participants?.find(p => String(p.userId || p.id || p._id) !== myId);
         let name = other ? (other.user?.fullName || other.fullName) : "Discussion";
         
         const id = conv.id || conv._id;
-        const lastMsg = conv.lastMessage?.content || "Démarrer une discussion";
-        const time = conv.lastMessage ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Maintenant";
+        const lastMsg = conv.lastMessage?.content || "Nouveau chat";
+        const time = conv.lastMessage ? new Date(conv.lastMessage.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
         const isUnread = unreadMap[id] > 0;
 
         const html = `
@@ -155,7 +149,7 @@ function renderMessages(messages) {
 window.openConversation = async function(convId, title) {
     if (!convId || convId === 'undefined') return;
     activeConversationId = convId;
-    unreadMap[convId] = 0; // Marquer comme lu
+    unreadMap[convId] = 0; 
 
     if (window.innerWidth < 768) {
         document.getElementById('sidebar-mid').classList.add('hidden');
@@ -198,7 +192,25 @@ async function sendMessage() {
     } catch (err) { console.error(err); }
 }
 
-// --- MODAL & CONTEXT MENU ---
+async function deleteCurrentConversation() {
+    if (!activeConversationId) return;
+    try {
+        await fetch(`${API_URL}/conversations/${activeConversationId}`, {
+            method: 'DELETE',
+            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
+        });
+        closeDeleteModal();
+        if (window.innerWidth < 768) document.getElementById('back-to-list').click();
+        else {
+            document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
+            document.getElementById('messages-container').innerHTML = "";
+            activeConversationId = null;
+        }
+        loadConversations();
+    } catch (err) { console.error(err); }
+}
+
+// --- INTERACTION ---
 
 function setupLongPress() {
     const items = document.querySelectorAll('.conv-item');
@@ -223,33 +235,13 @@ window.closeContextMenu = () => { document.getElementById('mobile-context-menu')
 window.openDeleteModal = () => { closeContextMenu(); document.getElementById('delete-modal').classList.remove('hidden'); };
 window.closeDeleteModal = () => { document.getElementById('delete-modal').classList.add('hidden'); };
 
-async function deleteCurrentConversation() {
-    if (!activeConversationId) return;
-    try {
-        await fetch(`${API_URL}/conversations/${activeConversationId}`, {
-            method: 'DELETE',
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        closeDeleteModal();
-        if (window.innerWidth < 768) document.getElementById('back-to-list').click();
-        else {
-            document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
-            document.getElementById('messages-container').innerHTML = "";
-            activeConversationId = null;
-        }
-        loadConversations();
-    } catch (err) { console.error(err); }
-}
-
-window.handleArchiveAction = () => { window.location.href = "archiver.html"; };
-
-// --- HELPERS ---
 function updateOnlineStatus(isOnline) {
     const dot = document.getElementById('online-dot');
     const statusText = document.getElementById('chat-contact-status');
     if (!dot || !statusText) return;
     dot.className = `w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-slate-300'}`;
     statusText.textContent = isOnline ? "En ligne" : "Hors-ligne";
+    statusText.className = `text-[9px] font-medium ${isOnline ? 'text-green-500' : 'text-slate-400'}`;
 }
 
 async function silentRefreshMessages() {
@@ -273,5 +265,35 @@ async function triggerSearch(query) {
         const users = result.data?.users || result.data || [];
         const found = users.filter(u => (u.fullName || "").toLowerCase().includes(query.toLowerCase()) && String(u.id || u._id) !== String(currentUser.id));
         displaySearchResults(found);
+    } catch (err) { console.error(err); }
+}
+
+function displaySearchResults(users) {
+    const container = document.getElementById('conversations-list');
+    container.innerHTML = '<div class="p-3 text-[9px] font-bold text-blue-600 uppercase bg-blue-50/30">Résultats :</div>';
+    users.forEach(u => {
+        const name = u.fullName || "Utilisateur";
+        const safeName = String(name).replace(/'/g, "\\'");
+        container.insertAdjacentHTML('beforeend', `
+            <div onclick="window.createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50">
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">${String(name).substring(0,2)}</div>
+                <h4 class="font-bold text-slate-800 text-[11px]">${name}</h4>
+            </div>`);
+    });
+}
+
+window.createNewConversation = async function(userId, userName) {
+    try {
+        const response = await fetch(`${API_URL}/conversations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
+            body: JSON.stringify({ type: "private", participantIds: [userId] })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            document.getElementById('search-input').value = "";
+            await loadConversations();
+            openConversation(result.data.id || result.data._id, userName);
+        }
     } catch (err) { console.error(err); }
 }
