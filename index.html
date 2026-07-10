@@ -3,24 +3,28 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>tailwind.config = { darkMode: 'class' }</script>
         <script src="js/theme.js"></script>
-        <link rel="stylesheet" href="css/dark.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <title>Kadea Chat - Accueil</title>
     </head>
-    <body>
-        <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+    <body class="bg-[#F8FAFC] dark:bg-slate-900 transition-colors">
+        <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 transition-colors">
             <div class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto w-full">
                 
                 <div class="flex items-center gap-3">
                     <img src="icons/Kadea Chat Logo.png" alt="Logo" class="w-9 h-9 object-contain">
-                    <span class="text-xl font-extrabold text-blue-700 tracking-tight">Kadea Chat</span>
+                    <span class="text-xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight">Kadea Chat</span>
                 </div>
 
                 <div class="flex items-center gap-6">
             
-                    <button id="darkModeBtn" class="hover:opacity-70 transition">
-                        <img src="icons/circum_dark.png" alt="Mode sombre" class="w-7 h-7"> 
+                    <button id="darkModeBtn" class="hover:opacity-70 transition flex items-center justify-center w-8 h-8">
+                        <!-- Icône lune (image) visible uniquement en mode clair -->
+                        <img src="icons/circum_dark.png" alt="Mode sombre" class="w-7 h-7 block dark:hidden"> 
+                        <!-- Icône soleil (FontAwesome) visible uniquement en mode sombre -->
+                        <i class="fa-solid fa-sun text-[22px] text-amber-400 hidden dark:block"></i>
                     </button>
                     <a href="register.html" id="data-i18n" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md shadow-blue-100">
                         Sign Up
@@ -37,11 +41,11 @@
                 <!-- COLONNE GAUCHE : TEXTE -->
                 <div class="flex flex-col items-start space-y-8">
                 
-                    <h1 id="data-i18n" class="text-5xl md:text-6xl font-extrabold text-[#0052cc] leading-[1.1] tracking-tight ">
+                    <h1 id="data-i18n" class="text-5xl md:text-6xl font-extrabold text-[#0052cc] dark:text-[#4d94ff] leading-[1.1] tracking-tight ">
                         A space for <br> exchanges <br> between learners.
                     </h1>
 
-                    <p id="data-i18n" class="text-lg text-slate-500 font-medium leading-relaxed max-w-md">
+                    <p id="data-i18n" class="text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-md">
                         Kadea Chat allows you to collaborate with your peers, share your knowledge and grow together within your digital community.
                     </p>
 
@@ -61,16 +65,16 @@
                 <!-- COLONNE DROITE : L'IMAGE -->
                 <div class="flex justify-end lg:pl-12">
                     <img src="imgs/Capture-1.png" alt="Aperçu Kadea Chat" 
-                        class="w-full h-auto rounded-2xl shadow-2xl border border-slate-50 transform hover:scale-[1.02] transition-transform duration-500">
+                        class="w-full h-auto rounded-2xl shadow-2xl border border-slate-50 dark:border-slate-800 transform hover:scale-[1.02] transition-transform duration-500">
                 </div>
             </div>
         </main>
 
-        <footer class="w-full border-t border-black mt-8 py-4"> 
+        <footer class="w-full border-t border-slate-200 dark:border-slate-800 mt-8 py-4 transition-colors"> 
             <div class="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-4">
                 
                 <div class="relative flex items-center">
-                    <select id="language-select" class="appearance-none bg-transparent border border-slate-300 pl-3 pr-8 py-1 rounded text-[12px] font-medium text-slate-600 outline-none cursor-pointer hover:border-slate-400 transition-all">
+                    <select id="language-select" class="appearance-none bg-transparent border border-slate-300 dark:border-slate-700 pl-3 pr-8 py-1 rounded text-[12px] font-medium text-slate-600 dark:text-slate-400 outline-none cursor-pointer hover:border-slate-400 dark:hover:border-slate-500 transition-all">
                         <option id="data-i18n">english</option>
                         <option id="data-i18n">french</option>
                     </select>
