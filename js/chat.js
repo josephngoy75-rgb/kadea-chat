@@ -6,6 +6,65 @@ const TOKEN = localStorage.getItem('token');
 let currentUser = null;
 let activeConversationId = null;
 let isSearching = false; 
+let contextTarget = null; // { id, content, isMe } - message ciblé par le menu contextuel
+let longPressTimer = null;
+let deleteMode = 'conversation'; // 'conversation' | 'message'
+let deleteTargetId = null;
+let editingMessageId = null; // id du message en cours d'édition (bloque le refresh auto)
+let contextConvTarget = null; // { id, name } - conversation ciblée par son menu contextuel
+let convLongPressTimer = null;
+let suppressConvClick = false; // évite d'ouvrir la conversation juste après un appui long
+
+// Empêche l'injection HTML (XSS) quand on affiche du texte venant de l'utilisateur/API
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = String(str ?? "");
+    return div.innerHTML;
+}
+
+// Notification interne à l'app (remplace alert()/confirm() natifs du navigateur)
+function showToast(message, type = 'error') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const styles = {
+        error: 'bg-red-500 text-white',
+        success: 'bg-green-600 text-white',
+        info: 'bg-slate-800 text-white'
+    };
+    const toast = document.createElement('div');
+    toast.className = `pointer-events-auto max-w-xs w-full sm:w-auto text-center text-[11px] font-semibold px-4 py-2.5 rounded-xl shadow-lg modal-animate ${styles[type] || styles.info}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// --- ARCHIVAGE LOCAL (pas de route API dédiée : géré via localStorage) ---
+function getArchivedIds() {
+    try { return JSON.parse(localStorage.getItem('archivedConversationIds') || '[]'); }
+    catch { return []; }
+}
+
+function archiveConversation(id) {
+    if (!id) return;
+    const archived = getArchivedIds();
+    const strId = String(id);
+    if (!archived.includes(strId)) {
+        archived.push(strId);
+        localStorage.setItem('archivedConversationIds', JSON.stringify(archived));
+    }
+    showToast('Conversation archivée.', 'success');
+    if (String(activeConversationId) === strId) {
+        activeConversationId = null;
+        document.getElementById('messages-container').innerHTML = "";
+        document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
+        if (window.innerWidth < 768) document.getElementById('back-to-list').click();
+    }
+    loadConversations();
+}
 
 // --- 2. INITIALISATION ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -48,9 +107,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         activeConversationId = null;
     };
 
-    document.getElementById('delete-conv-btn').onclick = openDeleteModal;
-    document.getElementById('confirm-delete-btn').onclick = deleteCurrentConversation;
+    document.getElementById('header-archive-btn').onclick = () => { if (activeConversationId) archiveConversation(activeConversationId); };
+    document.getElementById('header-delete-btn').onclick = () => { if (activeConversationId) window.openDeleteModal('conversation', activeConversationId); };
+    document.getElementById('confirm-delete-btn').onclick = handleConfirmDelete;
+
+    // Menu "3 points" (mobile) regroupant Archiver / Supprimer
+    document.getElementById('header-more-btn').onclick = (e) => {
+        e.stopPropagation();
+        document.getElementById('header-more-menu').classList.toggle('hidden');
+    };
+    document.addEventListener('click', () => {
+        document.getElementById('header-more-menu')?.classList.add('hidden');
+    });
+    document.getElementById('header-more-archive').onclick = () => {
+        document.getElementById('header-more-menu').classList.add('hidden');
+        if (activeConversationId) archiveConversation(activeConversationId);
+    };
+    document.getElementById('header-more-delete').onclick = () => {
+        document.getElementById('header-more-menu').classList.add('hidden');
+        if (activeConversationId) window.openDeleteModal('conversation', activeConversationId);
+    };
+
     document.getElementById('gear-btn').onclick = () => window.location.href = 'profile.html';
+
+    initMessageContextMenu();
+    initConvContextMenu();
 
     // REFRESH AUTO
     setInterval(() => { 
@@ -70,8 +151,13 @@ async function loadUserProfile() {
         if (response.ok) {
             currentUser = result.data.user;
             document.getElementById('user-fullname-display').textContent = currentUser.fullName;
+        } else {
+            showToast("Impossible de charger votre profil.", 'error');
         }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+        showToast("Erreur réseau : profil indisponible.", 'error');
+    }
 }
 
 async function loadConversations() {
@@ -82,7 +168,11 @@ async function loadConversations() {
         });
         const result = await response.json();
         if (response.ok) renderConversations(result.data.conversations || []);
-    } catch (err) { console.error(err); }
+        else showToast("Impossible de charger les conversations.", 'error');
+    } catch (err) {
+        console.error(err);
+        showToast("Erreur réseau : conversations indisponibles.", 'error');
+    }
 }
 
 // --- 4. ACTIONS ---
@@ -106,6 +196,7 @@ window.createNewConversation = async function(userId, userName) {
 }
 
 window.openConversation = async function(convId, title) {
+    if (suppressConvClick) { suppressConvClick = false; return; }
     if (!convId || convId === 'undefined') return;
     activeConversationId = convId;
 
@@ -129,8 +220,13 @@ window.openConversation = async function(convId, title) {
             const other = result.data.participants?.find(p => String(p.id || p._id) !== myId);
             updateOnlineStatus(other ? other.isOnline : false);
             renderMessages(result.data.messages || []);
+        } else {
+            showToast("Cette conversation est introuvable.", 'error');
         }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+        showToast("Erreur réseau : conversation indisponible.", 'error');
+    }
 }
 
 async function sendMessage() {
@@ -139,15 +235,19 @@ async function sendMessage() {
     if (!content || !activeConversationId) return;
 
     try {
-        await fetch(`${API_URL}/conversations/${activeConversationId}/messages`, {
+        const res = await fetch(`${API_URL}/conversations/${activeConversationId}/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
             body: JSON.stringify({ content })
         });
+        if (!res.ok) throw new Error('Échec de l\'envoi');
         input.value = "";
         await silentRefreshMessages();
         loadConversations();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+        showToast("Le message n'a pas pu être envoyé.", 'error');
+    }
 }
 
 // --- 5. RENDU ---
@@ -155,9 +255,11 @@ async function sendMessage() {
 function renderConversations(conversations) {
     const container = document.getElementById('conversations-list');
     if (!container || isSearching) return;
-    container.innerHTML = conversations.length === 0 ? '<p class="p-8 text-center text-[10px] text-slate-300 italic">Aucune conversation.</p>' : ""; 
+    const archivedIds = getArchivedIds();
+    const visibleConversations = conversations.filter(conv => !archivedIds.includes(String(conv.id || conv._id)));
+    container.innerHTML = visibleConversations.length === 0 ? '<p class="p-8 text-center text-[10px] text-slate-300 italic">Aucune conversation.</p>' : ""; 
 
-    conversations.forEach(conv => {
+    visibleConversations.forEach(conv => {
         const myId = String(currentUser.id || currentUser._id);
         const other = conv.participants?.find(p => String(p.userId || p.id || p._id) !== myId);
         let name = other ? (other.user?.fullName || other.fullName) : "Utilisateur";
@@ -166,16 +268,18 @@ function renderConversations(conversations) {
         const date = conv.lastMessage ? new Date(conv.lastMessage.createdAt) : new Date(conv.createdAt);
         const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
+        const safeName = escapeHtml(name);
         container.insertAdjacentHTML('beforeend', `
             <div onclick="window.openConversation('${id}', '${name.replace(/'/g, "\\'")}')" 
+                 data-conv-id="${id}" data-conv-name="${name.replace(/"/g, '&quot;')}"
                  class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 cursor-pointer transition border-b border-slate-50 ${activeConversationId === id ? 'bg-slate-50 border-l-4 border-blue-600' : ''}">
                 <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">${String(name).substring(0, 2)}</div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline mb-0.5">
-                        <h4 class="font-bold text-slate-800 text-[12px] truncate">${name}</h4>
+                        <h4 class="font-bold text-slate-800 text-[12px] truncate">${safeName}</h4>
                         <span class="text-[9px] text-slate-400">${timeStr}</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 truncate">${lastMsg}</p>
+                    <p class="text-[11px] text-slate-400 truncate">${escapeHtml(lastMsg)}</p>
                 </div>
             </div>`);
     });
@@ -188,8 +292,9 @@ function renderMessages(messages) {
     container.innerHTML = '<div class="flex justify-center mb-6"><span class="bg-slate-50 text-slate-400 text-[9px] font-bold px-3 py-1 rounded-full uppercase">Aujourd\'hui</span></div>';
     msgsArray.forEach(msg => {
         const isMe = String(msg.senderId) === String(currentUser.id || currentUser._id);
+        const msgId = msg.id || msg._id;
         const time = new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        container.insertAdjacentHTML('beforeend', `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2"><div class="max-w-[75%]"><div class="${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none'} p-2.5 shadow-sm"><p class="text-[12px] leading-relaxed font-medium">${msg.content}</p></div><span class="text-[8px] text-slate-300 mt-1 block ${isMe ? 'text-right' : ''}">${time}</span></div></div>`);
+        container.insertAdjacentHTML('beforeend', `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2" data-message-id="${msgId}" data-is-me="${isMe}"><div class="max-w-[75%]"><div class="bubble-content ${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none'} p-2.5 shadow-sm"><p class="msg-text text-[12px] leading-relaxed font-medium">${escapeHtml(msg.content)}</p></div><span class="text-[8px] text-slate-300 mt-1 block ${isMe ? 'text-right' : ''}">${time}</span></div></div>`);
     });
     container.scrollTop = container.scrollHeight;
 }
@@ -212,18 +317,47 @@ async function triggerSearch(query) {
     } catch (err) { console.error(err); }
 }
 
-window.openDeleteModal = () => document.getElementById('delete-modal').classList.remove('hidden');
+window.openDeleteModal = (mode = 'conversation', targetId = null) => {
+    deleteMode = mode;
+    deleteTargetId = targetId;
+    const title = document.getElementById('delete-modal-title');
+    const text = document.getElementById('delete-modal-text');
+    if (mode === 'message') {
+        title.textContent = 'Supprimer le message ?';
+        text.textContent = 'Cette action est définitive.';
+    } else {
+        title.textContent = 'Supprimer la discussion ?';
+        text.textContent = 'Cette action est définitive.';
+    }
+    document.getElementById('delete-modal').classList.remove('hidden');
+};
 window.closeDeleteModal = () => document.getElementById('delete-modal').classList.add('hidden');
 
-async function deleteCurrentConversation() {
-    if (!activeConversationId) return;
+async function handleConfirmDelete() {
+    if (deleteMode === 'message') {
+        await window.deleteMessage(deleteTargetId);
+    } else {
+        await deleteConversationById(deleteTargetId);
+    }
+    window.closeDeleteModal();
+}
+
+async function deleteConversationById(id) {
+    if (!id) return;
     try {
-        await fetch(`${API_URL}/conversations/${activeConversationId}`, { method: 'DELETE', headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` } });
-        window.closeDeleteModal(); activeConversationId = null; loadConversations();
-        document.getElementById('messages-container').innerHTML = ""; 
-        document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
-        if (window.innerWidth < 768) document.getElementById('back-to-list').click();
-    } catch (err) { console.error(err); }
+        const res = await fetch(`${API_URL}/conversations/${id}`, { method: 'DELETE', headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` } });
+        if (!res.ok) throw new Error('Échec de la suppression de la conversation');
+        if (String(activeConversationId) === String(id)) {
+            activeConversationId = null;
+            document.getElementById('messages-container').innerHTML = "";
+            document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
+            if (window.innerWidth < 768) document.getElementById('back-to-list').click();
+        }
+        loadConversations();
+    } catch (err) {
+        console.error(err);
+        showToast("Impossible de supprimer la conversation.", 'error');
+    }
 }
 
 function updateOnlineStatus(isOnline) {
@@ -232,10 +366,195 @@ function updateOnlineStatus(isOnline) {
 }
 
 async function silentRefreshMessages() {
-    if (!activeConversationId || isSearching) return;
+    if (!activeConversationId || isSearching || editingMessageId) return;
     try {
         const response = await fetch(`${API_URL}/conversations/${activeConversationId}/messages`, { headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` } });
         const result = await response.json();
         renderMessages(Array.isArray(result.data) ? result.data : (result.data?.messages || []));
     } catch (err) { console.error(err); }
+}
+
+// --- 7. MENU CONTEXTUEL MESSAGE (clic droit desktop / appui long mobile) ---
+
+function initMessageContextMenu() {
+    const container = document.getElementById('messages-container');
+    const menu = document.getElementById('msg-context-menu');
+    if (!container || !menu) return;
+
+    // Clic droit (desktop)
+    container.addEventListener('contextmenu', (e) => {
+        const bubble = e.target.closest('[data-message-id]');
+        if (!bubble) return;
+        e.preventDefault();
+        openContextMenu(bubble, e.clientX, e.clientY);
+    });
+
+    // Appui long (mobile / tactile)
+    container.addEventListener('touchstart', (e) => {
+        const bubble = e.target.closest('[data-message-id]');
+        if (!bubble) return;
+        const touch = e.touches[0];
+        longPressTimer = setTimeout(() => {
+            openContextMenu(bubble, touch.clientX, touch.clientY);
+            if (navigator.vibrate) navigator.vibrate(30);
+        }, 500);
+    }, { passive: true });
+    container.addEventListener('touchend', () => clearTimeout(longPressTimer));
+    container.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+    // Fermer le menu si on clique/touche ailleurs
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target)) menu.classList.add('hidden');
+    });
+
+    // Actions du menu
+    document.getElementById('ctx-edit').onclick = () => {
+        menu.classList.add('hidden');
+        if (contextTarget) enterEditMode(contextTarget.id, contextTarget.content);
+    };
+    document.getElementById('ctx-copy').onclick = () => {
+        menu.classList.add('hidden');
+        if (contextTarget) navigator.clipboard.writeText(contextTarget.content).catch(() => {});
+    };
+    document.getElementById('ctx-delete').onclick = () => {
+        menu.classList.add('hidden');
+        if (contextTarget) window.openDeleteModal('message', contextTarget.id);
+    };
+}
+
+function openContextMenu(bubbleEl, x, y) {
+    const menu = document.getElementById('msg-context-menu');
+    const isMe = bubbleEl.dataset.isMe === 'true';
+    const textEl = bubbleEl.querySelector('.msg-text');
+
+    contextTarget = {
+        id: bubbleEl.dataset.messageId,
+        content: textEl ? textEl.textContent : "",
+        isMe
+    };
+
+    // Modifier/Supprimer réservés à mes propres messages ; Copier dispo pour tous
+    document.getElementById('ctx-edit').classList.toggle('hidden', !isMe);
+    document.getElementById('ctx-delete').classList.toggle('hidden', !isMe);
+
+    // Positionnement en évitant de sortir de l'écran
+    const menuWidth = 180, menuHeight = 150;
+    menu.style.left = Math.min(x, window.innerWidth - menuWidth) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - menuHeight) + 'px';
+    menu.classList.remove('hidden');
+}
+
+function enterEditMode(msgId, currentContent) {
+    const bubble = document.querySelector(`[data-message-id="${msgId}"] .bubble-content`);
+    if (!bubble) return;
+    editingMessageId = msgId;
+    bubble.innerHTML = `
+        <input type="text" class="edit-input w-full bg-transparent text-white placeholder-white/70 text-[12px] outline-none border-b border-white/40 pb-1" value="${escapeHtml(currentContent)}">
+        <div class="flex gap-3 mt-1.5 justify-end">
+            <i class="fa-solid fa-xmark text-[11px] text-white/80 cursor-pointer hover:text-white"></i>
+            <i class="fa-solid fa-check text-[11px] text-white/80 cursor-pointer hover:text-white"></i>
+        </div>`;
+    const input = bubble.querySelector('.edit-input');
+    const [cancelIcon, saveIcon] = bubble.querySelectorAll('.flex.gap-3 i');
+    input.focus();
+    input.select();
+
+    const save = () => window.saveEditedMessage(msgId, input.value.trim());
+    const cancel = () => { editingMessageId = null; silentRefreshMessages(); };
+
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') cancel();
+    };
+    saveIcon.onclick = save;
+    cancelIcon.onclick = cancel;
+}
+
+window.saveEditedMessage = async function(msgId, newContent) {
+    if (!newContent) return;
+    try {
+        const res = await fetch(`${API_URL}/messages/${msgId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
+            body: JSON.stringify({ content: newContent })
+        });
+        if (!res.ok) throw new Error('Échec de la modification');
+        editingMessageId = null;
+        await silentRefreshMessages();
+        loadConversations();
+    } catch (err) {
+        console.error("Erreur modification message:", err);
+        showToast("Impossible de modifier ce message.", 'error');
+        editingMessageId = null;
+        silentRefreshMessages();
+    }
+}
+
+window.deleteMessage = async function(msgId) {
+    try {
+        const res = await fetch(`${API_URL}/messages/${msgId}`, {
+            method: 'DELETE',
+            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
+        });
+        if (!res.ok) throw new Error('Échec de la suppression');
+        await silentRefreshMessages();
+        loadConversations();
+    } catch (err) {
+        console.error("Erreur suppression message:", err);
+        showToast("Impossible de supprimer ce message.", 'error');
+    }
+}
+
+// --- 8. MENU CONTEXTUEL CONVERSATION (clic droit desktop / appui long mobile) ---
+
+function initConvContextMenu() {
+    const container = document.getElementById('conversations-list');
+    const menu = document.getElementById('conv-context-menu');
+    if (!container || !menu) return;
+
+    // Clic droit (desktop)
+    container.addEventListener('contextmenu', (e) => {
+        const item = e.target.closest('.conv-item');
+        if (!item) return;
+        e.preventDefault();
+        openConvContextMenu(item, e.clientX, e.clientY);
+    });
+
+    // Appui long (mobile / tactile)
+    container.addEventListener('touchstart', (e) => {
+        const item = e.target.closest('.conv-item');
+        if (!item) return;
+        const touch = e.touches[0];
+        convLongPressTimer = setTimeout(() => {
+            suppressConvClick = true; // empêche l'ouverture de la conversation au relâchement du doigt
+            openConvContextMenu(item, touch.clientX, touch.clientY);
+            if (navigator.vibrate) navigator.vibrate(30);
+        }, 500);
+    }, { passive: true });
+    container.addEventListener('touchend', () => clearTimeout(convLongPressTimer));
+    container.addEventListener('touchmove', () => clearTimeout(convLongPressTimer));
+
+    // Fermer le menu si on clique/touche ailleurs
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target)) menu.classList.add('hidden');
+    });
+
+    document.getElementById('conv-ctx-archive').onclick = () => {
+        menu.classList.add('hidden');
+        if (contextConvTarget) archiveConversation(contextConvTarget.id);
+    };
+    document.getElementById('conv-ctx-delete').onclick = () => {
+        menu.classList.add('hidden');
+        if (contextConvTarget) window.openDeleteModal('conversation', contextConvTarget.id);
+    };
+}
+
+function openConvContextMenu(itemEl, x, y) {
+    const menu = document.getElementById('conv-context-menu');
+    contextConvTarget = { id: itemEl.dataset.convId, name: itemEl.dataset.convName };
+
+    const menuWidth = 180, menuHeight = 110;
+    menu.style.left = Math.min(x, window.innerWidth - menuWidth) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - menuHeight) + 'px';
+    menu.classList.remove('hidden');
 }
