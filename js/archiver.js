@@ -82,7 +82,7 @@ async function loadArchivedConversations() {
     const archivedIds = getArchivedIds();
     const container = document.getElementById('archived-list');
     if (archivedIds.length === 0) {
-        container.innerHTML = '<p class="p-8 text-center text-[11px] text-slate-300 italic">Aucune conversation archivée.</p>';
+        container.innerHTML = '<p class="p-8 text-center text-[11px] text-slate-300 dark:text-slate-600 italic">Aucune conversation archivée.</p>';
         return;
     }
     try {
@@ -123,7 +123,7 @@ async function deleteConversationById(id) {
 function renderArchivedList(conversations) {
     const container = document.getElementById('archived-list');
     if (conversations.length === 0) {
-        container.innerHTML = '<p class="p-8 text-center text-[11px] text-slate-300 italic">Aucune conversation archivée.</p>';
+        container.innerHTML = '<p class="p-8 text-center text-[11px] text-slate-300 dark:text-slate-600 italic">Aucune conversation archivée.</p>';
         return;
     }
     container.innerHTML = "";
@@ -138,13 +138,13 @@ function renderArchivedList(conversations) {
         const safeName = escapeHtml(name);
 
         container.insertAdjacentHTML('beforeend', `
-            <div onclick="window.openArchivedConversation('${id}', '${name.replace(/'/g, "\\'")}')"
+            <div onclick="window.openArchivedConversation('${id}', '${name.replace(/'/g, "\\'")}')" 
                  data-conv-id="${id}" data-conv-name="${name.replace(/"/g, '&quot;')}"
-                 class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 cursor-pointer transition border-b border-slate-50">
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">${String(name).substring(0, 2)}</div>
+                 class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border-b border-slate-50 dark:border-slate-800">
+                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs uppercase">${String(name).substring(0, 2)}</div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline mb-0.5">
-                        <h4 class="font-bold text-slate-800 text-[12px] truncate">${safeName}</h4>
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 text-[12px] truncate">${safeName}</h4>
                         <span class="text-[9px] text-slate-400">${timeStr}</span>
                     </div>
                     <p class="text-[11px] text-slate-400 truncate">${escapeHtml(lastMsg)}</p>

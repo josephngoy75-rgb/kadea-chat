@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script src="js/theme.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Kadea Chat - Connexion</title>
 </head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+<body class="bg-slate-50 dark:bg-slate-900 flex items-center justify-center min-h-screen p-4 transition-colors">
 
     <div class="w-full max-w-md">
         <!-- Section Logo et Titre (En dehors de la carte pour coller à la maquette) -->
@@ -19,11 +21,11 @@
             
             <!-- TITRE BIEN BLEU ET BIEN CENTRÉ -->
             <h1 class="text-3xl font-extrabold text-[#0052cc] tracking-tight">Welcome back</h1>
-            <p class="text-slate-500 text-sm mt-2 font-medium">Please enter your details to sign in to Kadea Chat</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-2 font-medium">Please enter your details to sign in to Kadea Chat</p>
         </div>
 
         <!-- Carte Login avec bords très arrondis -->
-        <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
+        <div class="bg-white dark:bg-slate-800 p-10 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700">
             
             <!-- Message d'erreur -->
             <div id="errorMessage" class="hidden bg-red-50 text-red-600 p-3 rounded-xl text-xs mb-4 border border-red-100 text-center"></div>
@@ -31,13 +33,13 @@
             <form id="loginForm" class="space-y-6">
                 <!-- Email Address -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2 ml-1 uppercase tracking-wide">Email Address</label>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 ml-1 uppercase tracking-wide">Email Address</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                             <i class="fa-regular fa-envelope text-sm"></i>
                         </span>
                         <input type="email" id="email" required
-                            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300"
+                            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border border-slate-100 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
                             placeholder="name@company.com">
                     </div>
                 </div>
@@ -45,7 +47,7 @@
                 <!-- Password -->
                 <div>
                     <div class="flex justify-between items-center mb-2 ml-1">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide">Password</label>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Password</label>
                         <a href="#" class="text-[10px] font-bold text-blue-600 hover:underline">Forgot?</a>
                     </div>
                     <div class="relative">
@@ -53,7 +55,7 @@
                             <i class="fa-solid fa-lock text-sm"></i>
                         </span>
                         <input type="password" id="password" required
-                            class="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300"
+                            class="w-full pl-11 pr-12 py-3.5 bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border border-slate-100 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
                             placeholder="••••••••">
                         <button type="button" id="toggleLoginPass" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400">
                             <i class="fa-regular fa-eye text-sm"></i>
@@ -64,7 +66,7 @@
                 <!-- Keep me signed in -->
                 <div class="flex items-center ml-1">
                     <input type="checkbox" id="remember" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
-                    <label for="remember" class="ml-2 text-xs text-slate-500 font-semibold cursor-pointer">Keep me signed in</label>
+                    <label for="remember" class="ml-2 text-xs text-slate-500 dark:text-slate-400 font-semibold cursor-pointer">Keep me signed in</label>
                 </div>
 
                 <!-- Login Button -->
@@ -76,7 +78,7 @@
         </div>
 
         <!-- Footer Link -->
-        <p class="mt-8 text-center text-sm text-slate-600 font-medium">
+        <p class="mt-8 text-center text-sm text-slate-600 dark:text-slate-400 font-medium">
             Don't have an account? <a href="register.html" class="font-bold text-blue-600 hover:underline">Create Account</a>
         </p>
     </div>
