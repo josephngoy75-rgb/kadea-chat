@@ -57,13 +57,7 @@ function archiveConversation(id) {
         localStorage.setItem('archivedConversationIds', JSON.stringify(archived));
     }
     showToast('Conversation archivée.', 'success');
-    if (String(activeConversationId) === strId) {
-        activeConversationId = null;
-        document.getElementById('messages-container').innerHTML = "";
-        document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
-        if (window.innerWidth < 768) document.getElementById('back-to-list').click();
-    }
-    loadConversations();
+    window.location.href = 'archiver.html';
 }
 
 // --- 2. INITIALISATION ---
