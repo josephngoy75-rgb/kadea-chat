@@ -14,6 +14,7 @@ let editingMessageId = null; // id du message en cours d'édition (bloque le ref
 let contextConvTarget = null; // { id, name } - conversation ciblée par son menu contextuel
 let convLongPressTimer = null;
 let suppressConvClick = false; // évite d'ouvrir la conversation juste après un appui long
+let cachedConversations = []; // dernière liste chargée, utilisée pour éviter de recréer une conversation existante
 
 // Empêche l'injection HTML (XSS) quand on affiche du texte venant de l'utilisateur/API
 function escapeHtml(str) {
@@ -57,13 +58,7 @@ function archiveConversation(id) {
         localStorage.setItem('archivedConversationIds', JSON.stringify(archived));
     }
     showToast('Conversation archivée.', 'success');
-    if (String(activeConversationId) === strId) {
-        activeConversationId = null;
-        document.getElementById('messages-container').innerHTML = "";
-        document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
-        if (window.innerWidth < 768) document.getElementById('back-to-list').click();
-    }
-    loadConversations();
+    window.location.href = 'archiver.html';
 }
 
 // --- 2. INITIALISATION ---
@@ -105,6 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('chat-window').classList.remove('flex');
         document.getElementById('mobile-nav').classList.remove('hidden');
         activeConversationId = null;
+        resetChatToEmptyState();
     };
 
     document.getElementById('header-archive-btn').onclick = () => { if (activeConversationId) archiveConversation(activeConversationId); };
@@ -151,6 +147,10 @@ async function loadUserProfile() {
         if (response.ok) {
             currentUser = result.data.user;
             document.getElementById('user-fullname-display').textContent = currentUser.fullName;
+            const avatarImg = document.getElementById('user-avatar-img');
+            if (avatarImg) {
+                avatarImg.src = localStorage.getItem('myAvatarUrl') || currentUser.avatarUrl || 'https://i.pravatar.cc/100?u=me';
+            }
         } else {
             showToast("Impossible de charger votre profil.", 'error');
         }
@@ -167,7 +167,10 @@ async function loadConversations() {
             headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
         });
         const result = await response.json();
-        if (response.ok) renderConversations(result.data.conversations || []);
+        if (response.ok) {
+            cachedConversations = result.data.conversations || [];
+            renderConversations(cachedConversations);
+        }
         else showToast("Impossible de charger les conversations.", 'error');
     } catch (err) {
         console.error(err);
@@ -178,6 +181,20 @@ async function loadConversations() {
 // --- 4. ACTIONS ---
 
 window.createNewConversation = async function(userId, userName) {
+    // Si une conversation avec cet utilisateur existe déjà, on l'ouvre directement (pas de doublon)
+    const myId = String(currentUser?.id || currentUser?._id);
+    const existing = cachedConversations.find(conv =>
+        conv.participants?.some(p => String(p.userId || p.id || p._id) === String(userId)) &&
+        conv.participants?.some(p => String(p.userId || p.id || p._id) === myId)
+    );
+    if (existing) {
+        isSearching = false;
+        document.getElementById('search-input').value = "";
+        await loadConversations();
+        window.openConversation(existing.id || existing._id, userName);
+        return;
+    }
+
     try {
         const response = await fetch(`${API_URL}/conversations`, {
             method: 'POST',
@@ -191,14 +208,33 @@ window.createNewConversation = async function(userId, userName) {
             await loadConversations();
             const newId = result.data.id || result.data._id;
             window.openConversation(newId, userName);
+        } else {
+            showToast("Impossible de créer la conversation.", 'error');
         }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+        showToast("Erreur réseau : conversation impossible à créer.", 'error');
+    }
+}
+
+// Réaffiche l'écran d'accueil (aucune conversation sélectionnée)
+function resetChatToEmptyState() {
+    document.getElementById('chat-content').classList.add('hidden');
+    document.getElementById('chat-content').classList.remove('flex');
+    document.getElementById('chat-empty-state').classList.remove('hidden');
+    document.getElementById('messages-container').innerHTML = "";
+    document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
 }
 
 window.openConversation = async function(convId, title) {
     if (suppressConvClick) { suppressConvClick = false; return; }
     if (!convId || convId === 'undefined') return;
     activeConversationId = convId;
+
+    // Bascule vers la vue conversation (masque l'écran d'accueil)
+    document.getElementById('chat-empty-state').classList.add('hidden');
+    document.getElementById('chat-content').classList.remove('hidden');
+    document.getElementById('chat-content').classList.add('flex');
 
     if (window.innerWidth < 768) {
         document.getElementById('sidebar-mid').classList.add('hidden');
@@ -220,6 +256,7 @@ window.openConversation = async function(convId, title) {
             const other = result.data.participants?.find(p => String(p.id || p._id) !== myId);
             updateOnlineStatus(other ? other.isOnline : false);
             renderMessages(result.data.messages || []);
+            document.getElementById('message-input').focus(); // curseur direct dans le champ de saisie
         } else {
             showToast("Cette conversation est introuvable.", 'error');
         }
@@ -257,7 +294,7 @@ function renderConversations(conversations) {
     if (!container || isSearching) return;
     const archivedIds = getArchivedIds();
     const visibleConversations = conversations.filter(conv => !archivedIds.includes(String(conv.id || conv._id)));
-    container.innerHTML = visibleConversations.length === 0 ? '<p class="p-8 text-center text-[10px] text-slate-300 italic">Aucune conversation.</p>' : ""; 
+    container.innerHTML = visibleConversations.length === 0 ? '<p class="p-8 text-center text-[10px] text-slate-300 dark:text-slate-600 italic">Aucune conversation.</p>' : ""; 
 
     visibleConversations.forEach(conv => {
         const myId = String(currentUser.id || currentUser._id);
@@ -272,11 +309,11 @@ function renderConversations(conversations) {
         container.insertAdjacentHTML('beforeend', `
             <div onclick="window.openConversation('${id}', '${name.replace(/'/g, "\\'")}')" 
                  data-conv-id="${id}" data-conv-name="${name.replace(/"/g, '&quot;')}"
-                 class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 cursor-pointer transition border-b border-slate-50 ${activeConversationId === id ? 'bg-slate-50 border-l-4 border-blue-600' : ''}">
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">${String(name).substring(0, 2)}</div>
+                 class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border-b border-slate-50 dark:border-slate-800 ${activeConversationId === id ? 'bg-slate-50 dark:bg-slate-800 border-l-4 border-blue-600' : ''}">
+                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs uppercase">${String(name).substring(0, 2)}</div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline mb-0.5">
-                        <h4 class="font-bold text-slate-800 text-[12px] truncate">${safeName}</h4>
+                        <h4 class="font-bold text-slate-800 dark:text-slate-100 text-[12px] truncate">${safeName}</h4>
                         <span class="text-[9px] text-slate-400">${timeStr}</span>
                     </div>
                     <p class="text-[11px] text-slate-400 truncate">${escapeHtml(lastMsg)}</p>
@@ -289,12 +326,12 @@ function renderMessages(messages) {
     const container = document.getElementById('messages-container');
     if (!container) return;
     const msgsArray = Array.isArray(messages) ? messages : (messages.messages || []);
-    container.innerHTML = '<div class="flex justify-center mb-6"><span class="bg-slate-50 text-slate-400 text-[9px] font-bold px-3 py-1 rounded-full uppercase">Aujourd\'hui</span></div>';
+    container.innerHTML = '<div class="flex justify-center mb-6"><span class="bg-slate-50 dark:bg-slate-800 text-slate-400 text-[9px] font-bold px-3 py-1 rounded-full uppercase">Aujourd\'hui</span></div>';
     msgsArray.forEach(msg => {
         const isMe = String(msg.senderId) === String(currentUser.id || currentUser._id);
         const msgId = msg.id || msg._id;
         const time = new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        container.insertAdjacentHTML('beforeend', `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2" data-message-id="${msgId}" data-is-me="${isMe}"><div class="max-w-[75%]"><div class="bubble-content ${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none'} p-2.5 shadow-sm"><p class="msg-text text-[12px] leading-relaxed font-medium">${escapeHtml(msg.content)}</p></div><span class="text-[8px] text-slate-300 mt-1 block ${isMe ? 'text-right' : ''}">${time}</span></div></div>`);
+        container.insertAdjacentHTML('beforeend', `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2" data-message-id="${msgId}" data-is-me="${isMe}"><div class="max-w-[75%]"><div class="bubble-content ${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-none'} p-2.5 shadow-sm"><p class="msg-text text-[12px] leading-relaxed font-medium">${escapeHtml(msg.content)}</p></div><span class="text-[8px] text-slate-300 dark:text-slate-600 mt-1 block ${isMe ? 'text-right' : ''}">${time}</span></div></div>`);
     });
     container.scrollTop = container.scrollHeight;
 }
@@ -308,10 +345,10 @@ async function triggerSearch(query) {
         const found = (result.data?.users || result.data || []).filter(u => u.fullName.toLowerCase().includes(query.toLowerCase()) && String(u.id || u._id) !== String(currentUser.id));
         const container = document.getElementById('conversations-list');
         if (container) {
-            container.innerHTML = '<div class="p-3 text-[9px] font-bold text-blue-600 uppercase bg-blue-50/30">Résultats :</div>';
+            container.innerHTML = '<div class="p-3 text-[9px] font-bold text-blue-600 uppercase bg-blue-50/30 dark:bg-blue-900/20">Résultats :</div>';
             found.forEach(u => {
                 const safeName = String(u.fullName).replace(/'/g, "\\'");
-                container.insertAdjacentHTML('beforeend', `<div onclick="window.createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50"><div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">${String(u.fullName).substring(0,2)}</div><h4 class="font-bold text-slate-800 text-[11px]">${u.fullName}</h4></div>`);
+                container.insertAdjacentHTML('beforeend', `<div onclick="window.createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-50 dark:border-slate-800"><div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase">${String(u.fullName).substring(0,2)}</div><h4 class="font-bold text-slate-800 dark:text-slate-100 text-[11px]">${u.fullName}</h4></div>`);
             });
         }
     } catch (err) { console.error(err); }
@@ -349,8 +386,7 @@ async function deleteConversationById(id) {
         if (!res.ok) throw new Error('Échec de la suppression de la conversation');
         if (String(activeConversationId) === String(id)) {
             activeConversationId = null;
-            document.getElementById('messages-container').innerHTML = "";
-            document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
+            resetChatToEmptyState();
             if (window.innerWidth < 768) document.getElementById('back-to-list').click();
         }
         loadConversations();
