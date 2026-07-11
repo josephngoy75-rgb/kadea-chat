@@ -18,10 +18,33 @@ const UI = {
     }
 };
 
+// Règles du mot de passe : au moins 8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial
+const PASSWORD_RULES = [
+    { test: (pwd) => pwd.length >= 8, message: "Le mot de passe doit contenir au moins 8 caractères." },
+    { test: (pwd) => /[A-Z]/.test(pwd), message: "Le mot de passe doit contenir au moins une majuscule." },
+    { test: (pwd) => /[0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un chiffre." },
+    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un caractère spécial." }
+];
+
+// Format email standard : quelquechose@domaine.extension
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const validateForm = (data) => {
-    if (!data.fullName || !data.email || !data.password) return "Veuillez remplir tous les champs.";
-    if (data.password !== data.confirmPassword) return "Les mots de passe ne correspondent pas.";
-    if (data.password.length < 6) return "Le mot de passe est trop court (min 6).";
+    if (!data.fullName || !data.email || !data.password || !data.confirmPassword) {
+        return "Veuillez remplir tous les champs.";
+    }
+
+    if (!EMAIL_REGEX.test(data.email)) {
+        return "Adresse email invalide (exemple attendu : nom@domaine.com).";
+    }
+
+    if (data.password !== data.confirmPassword) {
+        return "Les mots de passe ne correspondent pas.";
+    }
+
+    const failedRule = PASSWORD_RULES.find(rule => !rule.test(data.password));
+    if (failedRule) return failedRule.message;
+
     return null;
 };
 
