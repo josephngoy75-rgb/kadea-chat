@@ -37,7 +37,7 @@ function showToast(message, type = 'error') {
         info: 'bg-slate-800 text-white'
     };
     const toast = document.createElement('div');
-    toast.className = `pointer-events-auto max-w-xs w-full sm:w-auto text-center text-[11px] font-semibold px-4 py-2.5 rounded-xl shadow-lg modal-animate ${styles[type] || styles.info}`;
+    toast.className = `pointer-events-auto max-w-xs w-full sm:w-auto text-center text-[11px] font-semibold px-4 py-2.5 rounded-xl shadow-lg dark:shadow-none modal-animate ${styles[type] || styles.info}`;
     toast.textContent = message;
     container.appendChild(toast);
     setTimeout(() => {
@@ -70,7 +70,12 @@ async function loadUserProfile() {
             headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
         });
         const result = await response.json();
-        if (response.ok) currentUser = result.data.user;
+        if (response.ok) {
+            currentUser = result.data.user;
+            if (currentUser && currentUser.fullName) {
+                localStorage.setItem('myFullName', currentUser.fullName);
+            }
+        }
         else showToast("Impossible de charger votre profil.", 'error');
     } catch (err) {
         console.error(err);

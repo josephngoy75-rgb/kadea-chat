@@ -43,7 +43,7 @@ function showToast(message, type = 'error') {
         info: 'bg-slate-800 text-white'
     };
     const toast = document.createElement('div');
-    toast.className = `pointer-events-auto max-w-xs w-full sm:w-auto text-center text-[11px] font-semibold px-4 py-2.5 rounded-xl shadow-lg modal-animate ${styles[type] || styles.info}`;
+    toast.className = `pointer-events-auto max-w-xs w-full sm:w-auto text-center text-[11px] font-semibold px-4 py-2.5 rounded-xl shadow-lg dark:shadow-none modal-animate ${styles[type] || styles.info}`;
     toast.textContent = message;
     container.appendChild(toast);
     setTimeout(() => {
@@ -59,7 +59,12 @@ async function fetchCurrentUser() {
             headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
         });
         const result = await res.json();
-        if (res.ok) currentUser = result.data.user;
+        if (res.ok) {
+            currentUser = result.data.user;
+            if (currentUser && currentUser.fullName) {
+                localStorage.setItem('myFullName', currentUser.fullName);
+            }
+        }
         else showToast("Impossible de charger votre profil.", 'error');
     } catch (err) {
         console.error(err);
@@ -105,7 +110,7 @@ function renderRecentActive(users) {
             <div onclick="startChat('${u.id || u._id}', '${String(u.fullName).replace(/'/g, "\\'")}')" 
                  class="flex flex-col items-center gap-2 cursor-pointer flex-shrink-0 transition-transform active:scale-90">
                 <div class="relative">
-                    <div class="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/30 border-2 border-white dark:border-slate-700 shadow-sm flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm uppercase">
+                    <div class="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/30 border-2 border-white dark:border-slate-700 shadow-sm dark:shadow-none flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm uppercase">
                         ${escapeHtml((u.fullName || "??").substring(0, 2))}
                     </div>
                     <span class="absolute bottom-0.5 right-0.5 w-4 h-4 ${statusColor} border-2 border-white dark:border-slate-900 rounded-full"></span>

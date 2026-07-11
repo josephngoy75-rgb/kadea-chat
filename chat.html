@@ -23,7 +23,7 @@
 
     <!-- MODAL DE SUPPRESSION -->
     <div id="delete-modal" class="hidden fixed inset-0 z-[110] bg-black/40 flex items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 modal-animate text-center border border-slate-100 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl dark:shadow-none p-6 modal-animate text-center border border-slate-100 dark:border-slate-700">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash-can text-2xl"></i>
             </div>
@@ -31,7 +31,7 @@
             <p id="delete-modal-text" class="text-sm text-slate-500 dark:text-slate-400 mt-2">Cette action est définitive.</p>
             <div class="flex gap-3 mt-6">
                 <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Annuler</button>
-                <button id="confirm-delete-btn" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-700 shadow-lg transition-all">Supprimer</button>
+                <button id="confirm-delete-btn" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-700 shadow-lg dark:shadow-none transition-all">Supprimer</button>
             </div>
         </div>
     </div>
@@ -40,7 +40,7 @@
     <div id="toast-container" class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 items-center pointer-events-none w-full px-4"></div>
 
     <!-- MENU CONTEXTUEL CONVERSATION (clic droit / appui long dans la liste) -->
-    <div id="conv-context-menu" class="hidden fixed z-[120] bg-white dark:bg-slate-800 shadow-2xl rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[170px] text-[12px] no-select">
+    <div id="conv-context-menu" class="hidden fixed z-[120] bg-white dark:bg-slate-800 shadow-2xl dark:shadow-none rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[170px] text-[12px] no-select">
         <div id="conv-ctx-archive" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
             <i class="fa-solid fa-box-archive text-slate-400 text-[11px] w-3"></i> Archiver
         </div>
@@ -50,7 +50,7 @@
     </div>
 
     <!-- MENU CONTEXTUEL MESSAGE (clic droit / appui long) -->
-    <div id="msg-context-menu" class="hidden fixed z-[120] bg-white dark:bg-slate-800 shadow-2xl rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[170px] text-[12px] no-select">
+    <div id="msg-context-menu" class="hidden fixed z-[120] bg-white dark:bg-slate-800 shadow-2xl dark:shadow-none rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[170px] text-[12px] no-select">
         <div id="ctx-edit" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
             <i class="fa-solid fa-pen text-slate-400 text-[11px] w-3"></i> Modifier
         </div>
@@ -66,7 +66,7 @@
     <aside class="hidden md:flex w-[68px] flex-col items-center py-6 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0">
         <div class="space-y-7 flex flex-col items-center flex-1">
             <div class="text-blue-600 text-2xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
-            <a href="chat.html" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100"><i class="fa-solid fa-message text-sm"></i></a>
+            <a href="chat.html" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100 dark:shadow-none"><i class="fa-solid fa-message text-sm"></i></a>
             <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
             <a href="users.html" class="text-slate-300 hover:text-blue-600 text-lg"><i class="fa-solid fa-user-group"></i></a>
             <a href="archiver.html" class="text-slate-300 hover:text-blue-600 text-lg"><i class="fa-solid fa-box-archive"></i></a>
@@ -78,8 +78,8 @@
     <aside id="sidebar-mid" class="flex-1 md:w-80 md:flex-none border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 bg-white dark:bg-slate-900 relative">
         <div class="p-4 flex justify-between items-center">
             <div class="flex items-center gap-2.5">
-                <img id="user-avatar-img" src="https://i.pravatar.cc/100?u=me" class="w-9 h-9 rounded-full border border-slate-100 dark:border-slate-700 object-cover">
-                <h3 id="user-fullname-display" class="font-bold text-slate-800 dark:text-slate-100 text-[12px]">Chargement...</h3>
+                <img id="user-avatar-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" class="w-9 h-9 rounded-full border border-slate-100 dark:border-slate-700 object-cover">
+                <h3 id="user-fullname-display" class="font-bold text-slate-800 dark:text-slate-100 text-[12px]">&nbsp;</h3>
             </div>
         </div>
         <div class="px-4 mb-3">
@@ -149,7 +149,7 @@
                 <!-- Menu 3 points : uniquement sur mobile, regroupe Archiver + Supprimer -->
                 <div class="relative md:hidden">
                     <i id="header-more-btn" class="fa-solid fa-ellipsis-vertical text-sm cursor-pointer hover:text-blue-500"></i>
-                    <div id="header-more-menu" class="hidden absolute right-0 top-6 bg-white dark:bg-slate-800 shadow-2xl rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[160px] text-[12px] z-50 no-select">
+                    <div id="header-more-menu" class="hidden absolute right-0 top-6 bg-white dark:bg-slate-800 shadow-2xl dark:shadow-none rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[160px] text-[12px] z-50 no-select">
                         <div id="header-more-archive" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
                             <i class="fa-solid fa-box-archive text-slate-400 text-[11px] w-3"></i> Archiver
                         </div>
@@ -170,7 +170,7 @@
                     <i class="fa-regular fa-face-smile text-xl cursor-pointer hover:text-blue-600"></i>
                 </div>
                 <input type="text" id="message-input" placeholder="Type a message..." class="flex-1 bg-transparent border-none text-[12px] outline-none dark:text-slate-100 dark:placeholder-slate-500">
-                <button id="send-btn" class="bg-blue-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                <button id="send-btn" class="bg-blue-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-lg dark:shadow-none active:scale-90 transition-transform">
                     <i class="fa-solid fa-paper-plane text-[11px]"></i>
                 </button>
             </div>
