@@ -33,7 +33,7 @@ function showToast(message, type = 'error') {
         info: 'bg-slate-800 text-white'
     };
     const toast = document.createElement('div');
-    toast.className = `pointer-events-auto max-w-xs w-full sm:w-auto text-center text-[11px] font-semibold px-4 py-2.5 rounded-xl shadow-lg modal-animate ${styles[type] || styles.info}`;
+    toast.className = `pointer-events-auto max-w-xs w-full sm:w-auto text-center text-[11px] font-semibold px-4 py-2.5 rounded-xl shadow-lg dark:shadow-none modal-animate ${styles[type] || styles.info}`;
     toast.textContent = message;
     container.appendChild(toast);
     setTimeout(() => {
@@ -146,6 +146,9 @@ async function loadUserProfile() {
         const result = await response.json();
         if (response.ok) {
             currentUser = result.data.user;
+            if (currentUser && currentUser.fullName) {
+                localStorage.setItem('myFullName', currentUser.fullName);
+            }
             document.getElementById('user-fullname-display').textContent = currentUser.fullName;
             const avatarImg = document.getElementById('user-avatar-img');
             if (avatarImg) {
@@ -294,7 +297,21 @@ function renderConversations(conversations) {
     if (!container || isSearching) return;
     const archivedIds = getArchivedIds();
     const visibleConversations = conversations.filter(conv => !archivedIds.includes(String(conv.id || conv._id)));
-    container.innerHTML = visibleConversations.length === 0 ? '<p class="p-8 text-center text-[10px] text-slate-300 dark:text-slate-600 italic">Aucune conversation.</p>' : ""; 
+    let html = "";
+    if (archivedIds.length > 0) {
+        html += `
+            <a href="archiver.html" class="md:hidden flex items-center gap-4 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition border-b border-slate-50 dark:border-slate-800">
+                <div class="w-10 h-10 flex items-center justify-center">
+                    <i class="fa-solid fa-box-archive text-slate-500 dark:text-slate-400 text-lg"></i>
+                </div>
+                <h4 class="font-semibold text-slate-800 dark:text-slate-100 text-[13px] flex-1">Archivées</h4>
+            </a>`;
+    }
+    
+    if (visibleConversations.length === 0) {
+        html += '<p class="p-8 text-center text-[10px] text-slate-300 dark:text-slate-600 italic">Aucune conversation.</p>';
+    }
+    container.innerHTML = html;
 
     visibleConversations.forEach(conv => {
         const myId = String(currentUser.id || currentUser._id);
@@ -331,7 +348,7 @@ function renderMessages(messages) {
         const isMe = String(msg.senderId) === String(currentUser.id || currentUser._id);
         const msgId = msg.id || msg._id;
         const time = new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        container.insertAdjacentHTML('beforeend', `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2" data-message-id="${msgId}" data-is-me="${isMe}"><div class="max-w-[75%]"><div class="bubble-content ${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-none'} p-2.5 shadow-sm"><p class="msg-text text-[12px] leading-relaxed font-medium">${escapeHtml(msg.content)}</p></div><span class="text-[8px] text-slate-300 dark:text-slate-600 mt-1 block ${isMe ? 'text-right' : ''}">${time}</span></div></div>`);
+        container.insertAdjacentHTML('beforeend', `<div class="flex ${isMe ? 'justify-end' : 'justify-start'} w-full mb-2" data-message-id="${msgId}" data-is-me="${isMe}"><div class="max-w-[75%]"><div class="bubble-content ${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-none'} p-2.5 shadow-sm dark:shadow-none"><p class="msg-text text-[12px] leading-relaxed font-medium">${escapeHtml(msg.content)}</p></div><span class="text-[8px] text-slate-300 dark:text-slate-600 mt-1 block ${isMe ? 'text-right' : ''}">${time}</span></div></div>`);
     });
     container.scrollTop = container.scrollHeight;
 }
