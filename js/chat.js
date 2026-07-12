@@ -1,6 +1,5 @@
 // --- 1. CONFIGURATION ---
-const API_URL = "https://kadea-chat-api.onrender.com";
-const API_KEY = "wksp_4dfecb20c70ac622983ae8356d95ff8a";
+import { apiRequest } from './api.js';
 const TOKEN = localStorage.getItem('token');
 
 let currentUser = null;
@@ -140,11 +139,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadUserProfile() {
     try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
-        if (response.ok) {
+        const apiResult = await apiRequest('/auth/me');
+        const result = apiResult.body;
+        if (apiResult.status) {
             currentUser = result.data.user;
             if (currentUser && currentUser.fullName) {
                 localStorage.setItem('myFullName', currentUser.fullName);
@@ -166,11 +163,9 @@ async function loadUserProfile() {
 async function loadConversations() {
     if (isSearching) return;
     try {
-        const response = await fetch(`${API_URL}/conversations`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
-        if (response.ok) {
+        const apiResult = await apiRequest('/conversations');
+        const result = apiResult.body;
+        if (apiResult.status) {
             cachedConversations = result.data.conversations || [];
             renderConversations(cachedConversations);
         }
@@ -199,13 +194,12 @@ window.createNewConversation = async function(userId, userName) {
     }
 
     try {
-        const response = await fetch(`${API_URL}/conversations`, {
+        const apiResult = await apiRequest('/conversations', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
             body: JSON.stringify({ type: "private", participantIds: [userId] })
         });
-        const result = await response.json();
-        if (response.ok) {
+        const result = apiResult.body;
+        if (apiResult.status) {
             isSearching = false; 
             document.getElementById('search-input').value = "";
             await loadConversations();
@@ -250,11 +244,9 @@ window.openConversation = async function(convId, title) {
     document.getElementById('contact-initials').textContent = String(title).substring(0, 2).toUpperCase();
 
     try {
-        const response = await fetch(`${API_URL}/conversations/${convId}`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
-        if (response.ok && result.data) {
+        const apiResult = await apiRequest(`/conversations/${convId}`);
+        const result = apiResult.body;
+        if (apiResult.status && result.data) {
             const myId = String(currentUser.id || currentUser._id);
             const other = result.data.participants?.find(p => String(p.id || p._id) !== myId);
             updateOnlineStatus(other ? other.isOnline : false);
@@ -275,12 +267,11 @@ async function sendMessage() {
     if (!content || !activeConversationId) return;
 
     try {
-        const res = await fetch(`${API_URL}/conversations/${activeConversationId}/messages`, {
+        const apiResult = await apiRequest(`/conversations/${activeConversationId}/messages`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
             body: JSON.stringify({ content })
         });
-        if (!res.ok) throw new Error('Échec de l\'envoi');
+        if (!apiResult.status) throw new Error('Échec de l\'envoi');
         input.value = "";
         await silentRefreshMessages();
         loadConversations();
@@ -357,8 +348,8 @@ function renderMessages(messages) {
 
 async function triggerSearch(query) {
     try {
-        const res = await fetch(`${API_URL}/users`, { headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` } });
-        const result = await res.json();
+        const apiResult = await apiRequest('/users');
+        const result = apiResult.body;
         const found = (result.data?.users || result.data || []).filter(u => u.fullName.toLowerCase().includes(query.toLowerCase()) && String(u.id || u._id) !== String(currentUser.id));
         const container = document.getElementById('conversations-list');
         if (container) {
@@ -399,8 +390,8 @@ async function handleConfirmDelete() {
 async function deleteConversationById(id) {
     if (!id) return;
     try {
-        const res = await fetch(`${API_URL}/conversations/${id}`, { method: 'DELETE', headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` } });
-        if (!res.ok) throw new Error('Échec de la suppression de la conversation');
+        const apiResult = await apiRequest(`/conversations/${id}`, { method: 'DELETE' });
+        if (!apiResult.status) throw new Error('Échec de la suppression de la conversation');
         if (String(activeConversationId) === String(id)) {
             activeConversationId = null;
             resetChatToEmptyState();
@@ -421,8 +412,8 @@ function updateOnlineStatus(isOnline) {
 async function silentRefreshMessages() {
     if (!activeConversationId || isSearching || editingMessageId) return;
     try {
-        const response = await fetch(`${API_URL}/conversations/${activeConversationId}/messages`, { headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` } });
-        const result = await response.json();
+        const apiResult = await apiRequest(`/conversations/${activeConversationId}/messages`);
+        const result = apiResult.body;
         renderMessages(Array.isArray(result.data) ? result.data : (result.data?.messages || []));
     } catch (err) { console.error(err); }
 }
@@ -526,12 +517,11 @@ function enterEditMode(msgId, currentContent) {
 window.saveEditedMessage = async function(msgId, newContent) {
     if (!newContent) return;
     try {
-        const res = await fetch(`${API_URL}/messages/${msgId}`, {
+        const apiResult = await apiRequest(`/messages/${msgId}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
             body: JSON.stringify({ content: newContent })
         });
-        if (!res.ok) throw new Error('Échec de la modification');
+        if (!apiResult.status) throw new Error('Échec de la modification');
         editingMessageId = null;
         await silentRefreshMessages();
         loadConversations();
@@ -545,11 +535,8 @@ window.saveEditedMessage = async function(msgId, newContent) {
 
 window.deleteMessage = async function(msgId) {
     try {
-        const res = await fetch(`${API_URL}/messages/${msgId}`, {
-            method: 'DELETE',
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        if (!res.ok) throw new Error('Échec de la suppression');
+        const apiResult = await apiRequest(`/messages/${msgId}`, { method: 'DELETE' });
+        if (!apiResult.status) throw new Error('Échec de la suppression');
         await silentRefreshMessages();
         loadConversations();
     } catch (err) {

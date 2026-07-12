@@ -1,5 +1,4 @@
-const API_URL = 'https://kadea-chat-api.onrender.com/auth/forgot-password';
-const API_KEY = 'wksp_4dfecb20c70ac622983ae8356d95ff8a';
+import { apiRequest } from './api.js';
 
 const UI = {
     form: document.getElementById('forgotForm'),
@@ -26,14 +25,12 @@ const setLoading = (state) => {
 };
 
 const sendResetCode = async (email) => {
-    const response = await fetch(API_URL, {
+    const apiResult = await apiRequest('/auth/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
         body: JSON.stringify({ email })
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Impossible d'envoyer le code.");
-    return data;
+    if (!apiResult.status) throw new Error(apiResult.body.message || "Impossible d'envoyer le code.");
+    return apiResult.body;
 };
 
 const handleSubmit = async (e) => {

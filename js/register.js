@@ -1,5 +1,4 @@
-const API_URL = 'https://kadea-chat-api.onrender.com/auth/register';
-const API_KEY = 'wksp_4dfecb20c70ac622983ae8356d95ff8a';
+import { apiRequest } from './api.js';
 
 // --- 2. SÉLECTEURS UI ---
 const UI = {
@@ -50,14 +49,12 @@ const validateForm = (data) => {
 
 //  SERVICES API 
 const registerUser = async (userData) => {
-    const response = await fetch(API_URL, {
+    const apiResult = await apiRequest('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
         body: JSON.stringify(userData)
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Erreur lors de l'inscription");
-    return data;
+    if (!apiResult.status) throw new Error(apiResult.body.message || "Erreur lors de l'inscription");
+    return apiResult.body;
 };
 
 

@@ -1,5 +1,4 @@
-const API_URL = 'https://kadea-chat-api.onrender.com/auth/reset-password';
-const API_KEY = 'wksp_4dfecb20c70ac622983ae8356d95ff8a';
+import { apiRequest } from './api.js';
 
 const UI = {
     form: document.getElementById('resetForm'),
@@ -52,14 +51,12 @@ const validateForm = (data) => {
 };
 
 const resetPassword = async (payload) => {
-    const response = await fetch(API_URL, {
+    const apiResult = await apiRequest('/auth/reset-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
         body: JSON.stringify(payload)
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Code invalide ou expiré.");
-    return data;
+    if (!apiResult.status) throw new Error(apiResult.body.message || "Code invalide ou expiré.");
+    return apiResult.body;
 };
 
 const toggleVisibility = (inputElement, btnElement) => {

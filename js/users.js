@@ -3,8 +3,7 @@
  * Mentor : NovaWeb Studio
  */
 
-const API_URL = "https://kadea-chat-api.onrender.com";
-const API_KEY = "wksp_4dfecb20c70ac622983ae8356d95ff8a";
+import { apiRequest } from './api.js';
 const TOKEN = localStorage.getItem('token');
 
 let allUsers = [];
@@ -55,11 +54,9 @@ function showToast(message, type = 'error') {
 
 async function fetchCurrentUser() {
     try {
-        const res = await fetch(`${API_URL}/auth/me`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await res.json();
-        if (res.ok) {
+        const apiResult = await apiRequest('/auth/me');
+        const result = apiResult.body;
+        if (apiResult.status) {
             currentUser = result.data.user;
             if (currentUser && currentUser.fullName) {
                 localStorage.setItem('myFullName', currentUser.fullName);
@@ -74,12 +71,10 @@ async function fetchCurrentUser() {
 
 async function fetchAllUsers() {
     try {
-        const response = await fetch(`${API_URL}/users`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
+        const apiResult = await apiRequest('/users');
+        const result = apiResult.body;
         
-        if (response.ok) {
+        if (apiResult.status) {
             allUsers = result.data.users || result.data;
             // On enlève Joseph de la liste
             allUsers = allUsers.filter(u => String(u.id || u._id) !== String(currentUser.id));
@@ -164,13 +159,11 @@ function renderAlphabeticalList(users) {
 window.startChat = async function(userId, userName) {
     try {
         // 1. Vérifie si une conversation existe déjà avec cet utilisateur (évite les doublons)
-        const convRes = await fetch(`${API_URL}/conversations`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const convResult = await convRes.json();
+        const convApiResult = await apiRequest('/conversations');
+        const convResult = convApiResult.body;
         let convId = null;
 
-        if (convRes.ok) {
+        if (convApiResult.status) {
             const myId = String(currentUser?.id || currentUser?._id);
             const existing = (convResult.data.conversations || []).find(conv =>
                 conv.participants?.some(p => String(p.userId || p.id || p._id) === String(userId)) &&
@@ -181,13 +174,12 @@ window.startChat = async function(userId, userName) {
 
         // 2. Sinon, on la crée
         if (!convId) {
-            const response = await fetch(`${API_URL}/conversations`, {
+            const apiResult = await apiRequest('/conversations', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
                 body: JSON.stringify({ type: "private", participantIds: [userId] })
             });
-            const result = await response.json();
-            if (!response.ok) {
+            const result = apiResult.body;
+            if (!apiResult.status) {
                 showToast("Impossible de démarrer la conversation.", 'error');
                 return;
             }

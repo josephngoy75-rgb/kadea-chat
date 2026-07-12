@@ -1,6 +1,5 @@
 // --- CONFIGURATION ---
-const API_URL = "https://kadea-chat-api.onrender.com";
-const API_KEY = "wksp_4dfecb20c70ac622983ae8356d95ff8a";
+import { apiRequest } from './api.js';
 const TOKEN = localStorage.getItem('token');
 
 let currentUserData = null;
@@ -84,12 +83,10 @@ function initTheme() {
 
 async function loadFullProfile() {
     try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
+        const apiResult = await apiRequest('/auth/me');
+        const result = apiResult.body;
 
-        if (response.ok && result.data?.user) {
+        if (apiResult.status && result.data?.user) {
             const user = result.data.user;
             currentUserData = user;
             if (user && user.fullName) {
@@ -163,12 +160,11 @@ function initEditProfileModal() {
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast("Adresse email invalide.", 'error'); return; }
 
         try {
-            const res = await fetch(`${API_URL}/users/me`, {
+            const apiResult = await apiRequest('/users/me', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
                 body: JSON.stringify({ fullName })
             });
-            if (!res.ok) throw new Error('Échec de la mise à jour');
+            if (!apiResult.status) throw new Error('Échec de la mise à jour');
 
             setProfileOverrides({ email, phone });
             showToast('Profil mis à jour.', 'success');
@@ -207,12 +203,11 @@ function initChangePasswordModal() {
     document.getElementById('send-code-btn').onclick = async () => {
         if (!currentUserData?.email) return;
         try {
-            const res = await fetch(`${API_URL}/auth/forgot-password`, {
+            const apiResult = await apiRequest('/auth/forgot-password', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
                 body: JSON.stringify({ email: currentUserData.email })
             });
-            if (!res.ok) throw new Error('Échec envoi code');
+            if (!apiResult.status) throw new Error('Échec envoi code');
             showToast('Code envoyé par email.', 'success');
             step1.classList.add('hidden');
             step2.classList.remove('hidden');
@@ -232,12 +227,11 @@ function initChangePasswordModal() {
         if (newPwd !== confirmPwd) { showToast("Les mots de passe ne correspondent pas.", 'error'); return; }
 
         try {
-            const res = await fetch(`${API_URL}/auth/reset-password`, {
+            const apiResult = await apiRequest('/auth/reset-password', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
                 body: JSON.stringify({ code, newPassword: newPwd })
             });
-            if (!res.ok) throw new Error('Échec réinitialisation');
+            if (!apiResult.status) throw new Error('Échec réinitialisation');
             showToast('Mot de passe modifié avec succès.', 'success');
             modal.classList.add('hidden');
         } catch (err) {
@@ -292,12 +286,11 @@ function initAvatarModal() {
 
             // Tentative de sauvegarde côté serveur (champ documenté par l'API)
             try {
-                const res = await fetch(`${API_URL}/users/me`, {
+                const apiResult = await apiRequest('/users/me', {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
                     body: JSON.stringify({ avatarUrl: dataUrl })
                 });
-                if (!res.ok) console.warn("Le serveur n'a pas accepté la photo (probablement trop volumineuse) — elle reste sauvegardée sur cet appareil.");
+                if (!apiResult.status) console.warn("Le serveur n'a pas accepté la photo (probablement trop volumineuse) — elle reste sauvegardée sur cet appareil.");
             } catch (err) {
                 console.warn("Sauvegarde serveur de la photo impossible, conservée localement uniquement.", err);
             }

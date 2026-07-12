@@ -1,6 +1,5 @@
 // --- 1. CONFIGURATION ---
-const API_URL = "https://kadea-chat-api.onrender.com";
-const API_KEY = "wksp_4dfecb20c70ac622983ae8356d95ff8a";
+import { apiRequest } from './api.js';
 const TOKEN = localStorage.getItem('token');
 
 let currentUser = null;
@@ -66,11 +65,9 @@ function unarchiveConversation(id) {
 
 async function loadUserProfile() {
     try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
-        if (response.ok) {
+        const apiResult = await apiRequest('/auth/me');
+        const result = apiResult.body;
+        if (apiResult.status) {
             currentUser = result.data.user;
             if (currentUser && currentUser.fullName) {
                 localStorage.setItem('myFullName', currentUser.fullName);
@@ -91,11 +88,9 @@ async function loadArchivedConversations() {
         return;
     }
     try {
-        const response = await fetch(`${API_URL}/conversations`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
-        if (!response.ok) { showToast("Impossible de charger les archives.", 'error'); return; }
+        const apiResult = await apiRequest('/conversations');
+        const result = apiResult.body;
+        if (!apiResult.status) { showToast("Impossible de charger les archives.", 'error'); return; }
         const all = result.data.conversations || [];
         const archived = all.filter(conv => archivedIds.includes(String(conv.id || conv._id)));
         renderArchivedList(archived);
@@ -107,11 +102,8 @@ async function loadArchivedConversations() {
 
 async function deleteConversationById(id) {
     try {
-        const res = await fetch(`${API_URL}/conversations/${id}`, {
-            method: 'DELETE',
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        if (!res.ok) throw new Error('Échec de la suppression de la conversation');
+        const apiResult = await apiRequest(`/conversations/${id}`, { method: 'DELETE' });
+        if (!apiResult.status) throw new Error('Échec de la suppression de la conversation');
         // On nettoie aussi la référence locale d'archivage devenue obsolète
         const strId = String(id);
         const archived = getArchivedIds().filter(a => a !== strId);

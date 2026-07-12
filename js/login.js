@@ -1,5 +1,4 @@
-const API_URL = 'https://kadea-chat-api.onrender.com/auth/login';
-const API_KEY = 'wksp_4dfecb20c70ac622983ae8356d95ff8a';
+import { apiRequest } from './api.js';
 
 const UI = {
     form: document.getElementById('loginForm'),
@@ -11,14 +10,12 @@ const UI = {
 };
 
 const loginUser = async (credentials) => {
-    const response = await fetch(API_URL, {
+    const apiResult = await apiRequest('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
         body: JSON.stringify(credentials)
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Identifiants incorrects");
-    return data;
+    if (!apiResult.status) throw new Error(apiResult.body.message || "Identifiants incorrects");
+    return apiResult.body;
 };
 
 const handleSubmit = async (e) => {
@@ -79,4 +76,3 @@ UI.toggle.addEventListener('click', () => {
 });
 
 UI.form.addEventListener('submit', handleSubmit);
-
