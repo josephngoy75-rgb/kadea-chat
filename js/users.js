@@ -1,7 +1,3 @@
-/**
- * PROJET KADEA CHAT - PAGE COMMUNAUTÉ
- * Mentor : NovaWeb Studio
- */
 
 import { apiRequest } from './api.js';
 const TOKEN = localStorage.getItem('token');

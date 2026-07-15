@@ -1,7 +1,3 @@
-/**
- * KADEA CHAT — Thème global et Anti-FOUC (Flash of Unstyled Content)
- * Inclus dans le <head> de TOUTES les pages.
- */
 
 (function () {
     // 1. Appliquer immédiatement le thème pour éviter le fond blanc

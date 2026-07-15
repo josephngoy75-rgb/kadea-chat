@@ -51,7 +51,7 @@ const handleSubmit = async (e) => {
         localStorage.setItem('resetPasswordEmail', email);
 
         // Certaines API de test renvoient directement le code dans la réponse
-        // quand aucun service d'envoi d'email n'est réellement configuré.
+        // aucun service d'envoi d'email n'est réellement configuré.
         const debugCode = result?.data?.code || result?.data?.resetCode || result?.code;
 
         if (debugCode) {

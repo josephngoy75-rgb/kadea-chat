@@ -46,7 +46,7 @@ function showToast(message, type = 'error') {
     }, 3000);
 }
 
-// --- 3. ARCHIVAGE LOCAL (partagé avec chat.js via localStorage) ---
+// ARCHIVAGE LOCAL 
 function getArchivedIds() {
     try { return JSON.parse(localStorage.getItem('archivedConversationIds') || '[]'); }
     catch { return []; }
@@ -61,7 +61,7 @@ function unarchiveConversation(id) {
     loadArchivedConversations();
 }
 
-// --- 4. FONCTIONS API ---
+// ---FONCTIONS API ---
 
 async function loadUserProfile() {
     try {
@@ -115,7 +115,7 @@ async function deleteConversationById(id) {
     }
 }
 
-// --- 5. RENDU ---
+// --- RENDU ---
 
 function renderArchivedList(conversations) {
     const container = document.getElementById('archived-list');
@@ -150,10 +150,8 @@ function renderArchivedList(conversations) {
     });
 }
 
-// --- 6. ACTIONS ---
+// --- ACTIONS ---
 
-// Ouvre la conversation archivée dans chat.html (elle reste archivée tant qu'on ne la désarchive pas,
-// comme sur WhatsApp : consulter une discussion archivée ne la fait pas ressortir automatiquement)
 window.openArchivedConversation = function(id, name) {
     if (suppressConvClick) { suppressConvClick = false; return; }
     localStorage.setItem('autoOpenConvId', id);
@@ -172,7 +170,7 @@ async function handleConfirmDelete() {
     window.closeDeleteModal();
 }
 
-// --- 7. MENU CONTEXTUEL (clic droit desktop / appui long mobile) ---
+// --- MENU CONTEXTUEL (clic droit desktop / appui long mobile) ---
 
 function initConvContextMenu() {
     const container = document.getElementById('archived-list');

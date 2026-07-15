@@ -1,12 +1,10 @@
 // 1. CONFIGURATION DE BASE
 const BASE_URL = "https://kadea-chat-api.onrender.com";
-
-// REMPLACE PAR TA CLÉ RÉCUPÉRÉE LORS DE LA CRÉATION DU WORKSPACE
 const API_KEY = "wksp_4dfecb20c70ac622983ae8356d95ff8a"; 
 
 /**
- * Fonction universelle pour envoyer des requêtes à l'API Kadea
- * @param {string} endpoint - Le chemin (ex: /auth/me)
+
+ * @param {string} endpoint - Le chemin 
  * @param {object} options - Les options (method, body, headers)
  */
 export async function apiRequest(endpoint, options = {}) {
@@ -15,10 +13,10 @@ export async function apiRequest(endpoint, options = {}) {
     // On récupère le token de l'utilisateur s'il est connecté
     const token = localStorage.getItem('token');
 
-    // Préparation des headers (les étiquettes du colis)
     const headers = {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY, // Obligatoire pour Kadea
+        'x-api-key': API_KEY, 
+        
         // Si on a un token, on l'ajoute pour prouver qui on est
         ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers
