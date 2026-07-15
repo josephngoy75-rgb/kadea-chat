@@ -95,7 +95,7 @@ const toggleVisibility = (inputElement, iconElement) => {
 const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const formData = {
+    const formData = { // je reupère les saisies 
         fullName: UI.inputs.name.value.trim(),
         email: UI.inputs.email.value.trim(),
         password: UI.inputs.pass.value,
@@ -111,12 +111,12 @@ const handleSubmit = async (event) => {
 
         await registerUser(formData);
         
-        // FeedBack Succès Vert
+        // FeedBack Succès 
         displayStatus("Compte créé avec succès ! Redirection...", true);
         
         setTimeout(() => {
             window.location.href = 'login.html';
-        }, 2000); // 2 secondes pour lire le message
+        }, 1500); // 1,5 secondes pour lire le message
 
     } catch (err) {
         displayStatus(err.message);
