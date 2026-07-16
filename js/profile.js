@@ -43,23 +43,26 @@ function showToast(message, type = 'error') {
     }, 3000);
 }
 
-// --- PRÉFÉRENCES LOCALES (l'API ne gère ni l'email affiché, ni le téléphone) ---
+// --- PRÉFÉRENCES LOCALES SCOPÉES PAR UTILISATEUR ---
+// (l'API ne gère pas l'email affiché différemment de l'email de connexion,
+//  donc on le garde en local — mais lié à l'id de l'utilisateur pour éviter
+//  qu'un autre compte connecté sur ce même navigateur n'hérite de ces données)
 
-function getProfileOverrides() {
-    try { return JSON.parse(localStorage.getItem('profileOverrides') || '{}'); }
+function getProfileOverrides(userId) {
+    try { return JSON.parse(localStorage.getItem(`profileOverrides_${userId}`) || '{}'); }
     catch { return {}; }
 }
 
-function setProfileOverrides(partial) {
-    const current = getProfileOverrides();
+function setProfileOverrides(userId, partial) {
+    const current = getProfileOverrides(userId);
     Object.keys(partial).forEach(key => {
         if (partial[key]) current[key] = partial[key];
     });
-    localStorage.setItem('profileOverrides', JSON.stringify(current));
+    localStorage.setItem(`profileOverrides_${userId}`, JSON.stringify(current));
 }
 
-function getMyAvatarUrl(apiAvatarUrl) {
-    return localStorage.getItem('myAvatarUrl') || apiAvatarUrl || 'https://i.pravatar.cc/150?u=me';
+function getMyAvatarUrl(userId, apiAvatarUrl) {
+    return localStorage.getItem(`myAvatarUrl_${userId}`) || apiAvatarUrl || 'https://i.pravatar.cc/150?u=me';
 }
 
 // --- THÈME (mode sombre / clair) ---
@@ -89,17 +92,19 @@ async function loadFullProfile() {
         if (apiResult.status && result.data?.user) {
             const user = result.data.user;
             currentUserData = user;
+            const userId = user.id || user._id;
             if (user && user.fullName) {
-                localStorage.setItem('myFullName', user.fullName);
+                localStorage.setItem(`myFullName_${userId}`, user.fullName);
+                localStorage.setItem('lastUserId', userId);
             }
-            const overrides = getProfileOverrides();
+            const overrides = getProfileOverrides(userId);
 
             document.getElementById('profile-name').textContent = user.fullName;
             document.getElementById('profile-email').textContent = overrides.email || user.email;
             document.getElementById('detail-username').textContent = user.fullName.toLowerCase().replace(/\s/g, '_');
-            document.getElementById('detail-phone').textContent = overrides.phone || "Non renseigné";
+            document.getElementById('detail-phone').textContent = user.bio || "Non renseigné";
 
-            const avatarUrl = getMyAvatarUrl(user.avatarUrl);
+            const avatarUrl = getMyAvatarUrl(userId, user.avatarUrl);
             document.getElementById('user-avatar-img').src = avatarUrl;
             document.getElementById('avatar-preview-img').src = avatarUrl;
 
@@ -143,10 +148,11 @@ function initEditProfileModal() {
     const modal = document.getElementById('edit-profile-modal');
 
     document.getElementById('edit-profile-btn').onclick = () => {
-        const overrides = getProfileOverrides();
+        const userId = currentUserData?.id || currentUserData?._id;
+        const overrides = getProfileOverrides(userId);
         document.getElementById('edit-fullname').value = currentUserData?.fullName || '';
         document.getElementById('edit-email').value = overrides.email || currentUserData?.email || '';
-        document.getElementById('edit-phone').value = overrides.phone || '';
+        document.getElementById('edit-phone').value = currentUserData?.bio || '';
         modal.classList.remove('hidden');
     };
     document.getElementById('cancel-edit-profile-btn').onclick = () => modal.classList.add('hidden');
@@ -155,18 +161,22 @@ function initEditProfileModal() {
         const fullName = document.getElementById('edit-fullname').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
+        const userId = currentUserData?.id || currentUserData?._id;
 
         if (!fullName) { showToast("Le nom complet est requis.", 'error'); return; }
         if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast("Adresse email invalide.", 'error'); return; }
 
         try {
+            // Le téléphone est stocké côté serveur dans le champ "bio" (documenté par l'API)
+            // => persistant sur tous les appareils, contrairement à un stockage local.
             const apiResult = await apiRequest('/users/me', {
                 method: 'PATCH',
-                body: JSON.stringify({ fullName })
+                body: JSON.stringify({ fullName, bio: phone })
             });
             if (!apiResult.status) throw new Error('Échec de la mise à jour');
 
-            setProfileOverrides({ email, phone });
+            // L'email affiché reste local : l'API ne permet pas de changer l'email de connexion.
+            setProfileOverrides(userId, { email });
             showToast('Profil mis à jour.', 'success');
             modal.classList.add('hidden');
             await loadFullProfile();
@@ -179,64 +189,51 @@ function initEditProfileModal() {
 
 // --- MODAL : CHANGER LE MOT DE PASSE ---
 
+// Mêmes règles que sur inscription/réinitialisation : cohérence dans toute l'app
+const PASSWORD_RULES = [
+    { test: (pwd) => pwd.length >= 8, message: "Le mot de passe doit contenir au moins 8 caractères." },
+    { test: (pwd) => /[A-Z]/.test(pwd), message: "Le mot de passe doit contenir au moins une majuscule." },
+    { test: (pwd) => /[0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un chiffre." },
+    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un caractère spécial." }
+];
+
 function initChangePasswordModal() {
     const modal = document.getElementById('change-password-modal');
-    const step1 = document.getElementById('pwd-step-1');
-    const step2 = document.getElementById('pwd-step-2');
 
-    function resetToStep1() {
-        step2.classList.add('hidden');
-        step1.classList.remove('hidden');
-        document.getElementById('pwd-code').value = '';
+    function resetForm() {
+        document.getElementById('pwd-old').value = '';
         document.getElementById('pwd-new').value = '';
         document.getElementById('pwd-confirm').value = '';
     }
 
     document.getElementById('change-password-btn').onclick = () => {
-        document.getElementById('pwd-target-email').textContent = currentUserData?.email || '';
-        resetToStep1();
+        resetForm();
         modal.classList.remove('hidden');
     };
-    document.getElementById('cancel-pwd-step1-btn').onclick = () => modal.classList.add('hidden');
-    document.getElementById('cancel-pwd-step2-btn').onclick = () => modal.classList.add('hidden');
-
-    document.getElementById('send-code-btn').onclick = async () => {
-        if (!currentUserData?.email) return;
-        try {
-            const apiResult = await apiRequest('/auth/forgot-password', {
-                method: 'POST',
-                body: JSON.stringify({ email: currentUserData.email })
-            });
-            if (!apiResult.status) throw new Error('Échec envoi code');
-            showToast('Code envoyé par email.', 'success');
-            step1.classList.add('hidden');
-            step2.classList.remove('hidden');
-        } catch (err) {
-            console.error(err);
-            showToast("Impossible d'envoyer le code.", 'error');
-        }
-    };
+    document.getElementById('cancel-pwd-btn').onclick = () => modal.classList.add('hidden');
 
     document.getElementById('confirm-new-pwd-btn').onclick = async () => {
-        const code = document.getElementById('pwd-code').value.trim();
-        const newPwd = document.getElementById('pwd-new').value;
+        const oldPassword = document.getElementById('pwd-old').value;
+        const newPassword = document.getElementById('pwd-new').value;
         const confirmPwd = document.getElementById('pwd-confirm').value;
 
-        if (!code || code.length !== 6) { showToast("Le code doit contenir 6 chiffres.", 'error'); return; }
-        if (newPwd.length < 6) { showToast("Le mot de passe doit contenir au moins 6 caractères.", 'error'); return; }
-        if (newPwd !== confirmPwd) { showToast("Les mots de passe ne correspondent pas.", 'error'); return; }
+        if (!oldPassword || !newPassword || !confirmPwd) { showToast("Veuillez remplir tous les champs.", 'error'); return; }
+        if (newPassword !== confirmPwd) { showToast("Les mots de passe ne correspondent pas.", 'error'); return; }
+
+        const failedRule = PASSWORD_RULES.find(rule => !rule.test(newPassword));
+        if (failedRule) { showToast(failedRule.message, 'error'); return; }
 
         try {
-            const apiResult = await apiRequest('/auth/reset-password', {
+            const apiResult = await apiRequest('/auth/change-password', {
                 method: 'POST',
-                body: JSON.stringify({ code, newPassword: newPwd })
+                body: JSON.stringify({ oldPassword, newPassword })
             });
-            if (!apiResult.status) throw new Error('Échec réinitialisation');
+            if (!apiResult.status) throw new Error(apiResult.body?.message || 'Échec du changement de mot de passe');
             showToast('Mot de passe modifié avec succès.', 'success');
             modal.classList.add('hidden');
         } catch (err) {
             console.error(err);
-            showToast("Code invalide ou expiré.", 'error');
+            showToast(err.message || "Mot de passe actuel incorrect.", 'error');
         }
     };
 }
@@ -277,9 +274,10 @@ function initAvatarModal() {
     fileInput.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        const userId = currentUserData?.id || currentUserData?._id;
         try {
             const dataUrl = await resizeImageToDataUrl(file, 300);
-            localStorage.setItem('myAvatarUrl', dataUrl);
+            localStorage.setItem(`myAvatarUrl_${userId}`, dataUrl);
             document.getElementById('user-avatar-img').src = dataUrl;
             document.getElementById('avatar-preview-img').src = dataUrl;
             showToast('Photo de profil mise à jour.', 'success');

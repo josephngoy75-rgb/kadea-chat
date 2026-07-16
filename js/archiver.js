@@ -46,7 +46,7 @@ function showToast(message, type = 'error') {
     }, 3000);
 }
 
-// ARCHIVAGE LOCAL 
+// --- 3. ARCHIVAGE LOCAL (partagé avec chat.js via localStorage) ---
 function getArchivedIds() {
     try { return JSON.parse(localStorage.getItem('archivedConversationIds') || '[]'); }
     catch { return []; }
@@ -61,7 +61,7 @@ function unarchiveConversation(id) {
     loadArchivedConversations();
 }
 
-// ---FONCTIONS API ---
+// --- 4. FONCTIONS API ---
 
 async function loadUserProfile() {
     try {
@@ -69,8 +69,10 @@ async function loadUserProfile() {
         const result = apiResult.body;
         if (apiResult.status) {
             currentUser = result.data.user;
+            const userId = currentUser.id || currentUser._id;
             if (currentUser && currentUser.fullName) {
-                localStorage.setItem('myFullName', currentUser.fullName);
+                localStorage.setItem(`myFullName_${userId}`, currentUser.fullName);
+                localStorage.setItem('lastUserId', userId);
             }
         }
         else showToast("Impossible de charger votre profil.", 'error');
@@ -115,7 +117,7 @@ async function deleteConversationById(id) {
     }
 }
 
-// --- RENDU ---
+// --- 5. RENDU ---
 
 function renderArchivedList(conversations) {
     const container = document.getElementById('archived-list');
@@ -150,8 +152,10 @@ function renderArchivedList(conversations) {
     });
 }
 
-// --- ACTIONS ---
+// --- 6. ACTIONS ---
 
+// Ouvre la conversation archivée dans chat.html (elle reste archivée tant qu'on ne la désarchive pas,
+// comme sur WhatsApp : consulter une discussion archivée ne la fait pas ressortir automatiquement)
 window.openArchivedConversation = function(id, name) {
     if (suppressConvClick) { suppressConvClick = false; return; }
     localStorage.setItem('autoOpenConvId', id);
@@ -170,7 +174,7 @@ async function handleConfirmDelete() {
     window.closeDeleteModal();
 }
 
-// --- MENU CONTEXTUEL (clic droit desktop / appui long mobile) ---
+// --- 7. MENU CONTEXTUEL (clic droit desktop / appui long mobile) ---
 
 function initConvContextMenu() {
     const container = document.getElementById('archived-list');

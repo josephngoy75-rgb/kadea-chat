@@ -143,13 +143,15 @@ async function loadUserProfile() {
         const result = apiResult.body;
         if (apiResult.status) {
             currentUser = result.data.user;
+            const userId = currentUser.id || currentUser._id;
             if (currentUser && currentUser.fullName) {
-                localStorage.setItem('myFullName', currentUser.fullName);
+                localStorage.setItem(`myFullName_${userId}`, currentUser.fullName);
+                localStorage.setItem('lastUserId', userId);
             }
             document.getElementById('user-fullname-display').textContent = currentUser.fullName;
             const avatarImg = document.getElementById('user-avatar-img');
             if (avatarImg) {
-                avatarImg.src = localStorage.getItem('myAvatarUrl') || currentUser.avatarUrl || 'https://i.pravatar.cc/100?u=me';
+                avatarImg.src = localStorage.getItem(`myAvatarUrl_${userId}`) || currentUser.avatarUrl || 'https://i.pravatar.cc/100?u=me';
             }
         } else {
             showToast("Impossible de charger votre profil.", 'error');

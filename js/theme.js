@@ -1,3 +1,7 @@
+/**
+ * KADEA CHAT — Thème global et Anti-FOUC (Flash of Unstyled Content)
+ * Inclus dans le <head> de TOUTES les pages.
+ */
 
 (function () {
     // 1. Appliquer immédiatement le thème pour éviter le fond blanc
@@ -24,10 +28,15 @@
     });
 
     // 3. Appliquer immédiatement les données de profil stockées (Avatar, Nom)
-    // dès que le DOM est prêt (avant même que fetch(/auth/me) ne réponde)
+    // dès que le DOM est prêt (avant même que fetch(/auth/me) ne réponde).
+    // Ces données sont scopées par "lastUserId" (mémorisé à la dernière connexion réussie)
+    // pour éviter qu'un autre compte connecté sur ce même navigateur n'en hérite.
     document.addEventListener('DOMContentLoaded', () => {
+        const lastUserId = localStorage.getItem('lastUserId');
+        if (!lastUserId) return;
+
         // Appliquer l'avatar local
-        const storedAvatar = localStorage.getItem('myAvatarUrl');
+        const storedAvatar = localStorage.getItem(`myAvatarUrl_${lastUserId}`);
         if (storedAvatar) {
             const avatarIds = ['user-avatar-img', 'avatar-preview-img'];
             avatarIds.forEach(id => {
@@ -37,14 +46,7 @@
         }
 
         // Appliquer le nom local
-        let storedName = localStorage.getItem('myFullName');
-        if (!storedName) {
-            try {
-                const overrides = JSON.parse(localStorage.getItem('profileOverrides') || '{}');
-                storedName = overrides.name;
-            } catch (e) {}
-        }
-
+        const storedName = localStorage.getItem(`myFullName_${lastUserId}`);
         if (storedName) {
             const nameDisplays = ['user-fullname-display', 'profile-name'];
             nameDisplays.forEach(id => {

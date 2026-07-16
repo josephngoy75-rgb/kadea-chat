@@ -1,3 +1,7 @@
+/**
+ * PROJET KADEA CHAT - PAGE COMMUNAUTÉ
+ * Mentor : NovaWeb Studio
+ */
 
 import { apiRequest } from './api.js';
 const TOKEN = localStorage.getItem('token');
@@ -54,8 +58,10 @@ async function fetchCurrentUser() {
         const result = apiResult.body;
         if (apiResult.status) {
             currentUser = result.data.user;
+            const userId = currentUser.id || currentUser._id;
             if (currentUser && currentUser.fullName) {
-                localStorage.setItem('myFullName', currentUser.fullName);
+                localStorage.setItem(`myFullName_${userId}`, currentUser.fullName);
+                localStorage.setItem('lastUserId', userId);
             }
         }
         else showToast("Impossible de charger votre profil.", 'error');
