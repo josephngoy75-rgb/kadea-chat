@@ -27,7 +27,8 @@ export async function apiRequest(endpoint, options = {}) {
         const response = await fetch(url, { ...options, headers });
         
         // On transforme la réponse en JSON
-        const data = await response.json();
+        const rawBody = await response.text();
+        const data = rawBody ? JSON.parse(rawBody) : {};
 
         // Si le serveur renvoie une erreur (400, 401, 404, 500...)
         if (!response.ok) {

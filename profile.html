@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
+    <script src="js/i18n.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Kadea Chat - Profil</title>
     <style>
@@ -22,25 +23,25 @@
     <!-- MODAL : MODIFIER LE PROFIL -->
     <div id="edit-profile-modal" class="hidden fixed inset-0 z-[110] bg-black/40 flex items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 modal-animate border border-slate-100 dark:border-slate-700">
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4">Modifier le profil</h3>
+            <h3 data-i18n="profile.editTitle" class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4">Modifier le profil</h3>
             <div class="space-y-3">
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Nom complet</label>
+                    <label data-i18n="profile.editFullName" class="text-[10px] font-bold text-slate-400 uppercase">Nom complet</label>
                     <input id="edit-fullname" type="text" class="w-full bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border-none rounded-lg py-2.5 px-3 text-xs outline-none mt-1">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Adresse email</label>
+                    <label data-i18n="profile.editEmail" class="text-[10px] font-bold text-slate-400 uppercase">Adresse email</label>
                     <input id="edit-email" type="email" class="w-full bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border-none rounded-lg py-2.5 px-3 text-xs outline-none mt-1">
-                    <p class="text-[9px] text-slate-400 mt-1">Affiché sur cet appareil uniquement (l'email de connexion reste inchangé).</p>
+                    <p data-i18n="profile.editEmailNote" class="text-[9px] text-slate-400 mt-1">Affiché sur cet appareil uniquement (l'email de connexion reste inchangé).</p>
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Téléphone</label>
+                    <label data-i18n="profile.editPhone" class="text-[10px] font-bold text-slate-400 uppercase">Téléphone</label>
                     <input id="edit-phone" type="tel" placeholder="+243 ..." class="w-full bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border-none rounded-lg py-2.5 px-3 text-xs outline-none mt-1">
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
-                <button id="cancel-edit-profile-btn" class="flex-1 py-2.5 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all text-xs">Annuler</button>
-                <button id="save-profile-btn" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg transition-all text-xs">Enregistrer</button>
+                <button id="cancel-edit-profile-btn" data-loader-ignore="true" data-i18n="common.cancel" class="flex-1 py-2.5 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all text-xs">Annuler</button>
+                <button id="save-profile-btn" data-i18n="common.save" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg transition-all text-xs">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -48,25 +49,25 @@
     <!-- MODAL : CHANGER LE MOT DE PASSE -->
     <div id="change-password-modal" class="hidden fixed inset-0 z-[110] bg-black/40 flex items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 modal-animate border border-slate-100 dark:border-slate-700">
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4">Changer le mot de passe</h3>
+            <h3 data-i18n="profile.changePasswordTitle" class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4">Changer le mot de passe</h3>
 
             <div class="space-y-3">
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Mot de passe actuel</label>
+                    <label data-i18n="profile.oldPassword" class="text-[10px] font-bold text-slate-400 uppercase">Mot de passe actuel</label>
                     <input id="pwd-old" type="password" class="w-full bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border-none rounded-lg py-2.5 px-3 text-xs outline-none mt-1">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Nouveau mot de passe</label>
+                    <label data-i18n="profile.newPassword" class="text-[10px] font-bold text-slate-400 uppercase">Nouveau mot de passe</label>
                     <input id="pwd-new" type="password" class="w-full bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border-none rounded-lg py-2.5 px-3 text-xs outline-none mt-1">
                 </div>
                 <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Confirmer le nouveau mot de passe</label>
+                    <label data-i18n="profile.confirmNewPassword" class="text-[10px] font-bold text-slate-400 uppercase">Confirmer le nouveau mot de passe</label>
                     <input id="pwd-confirm" type="password" class="w-full bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border-none rounded-lg py-2.5 px-3 text-xs outline-none mt-1">
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
-                <button id="cancel-pwd-btn" class="flex-1 py-2.5 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs">Annuler</button>
-                <button id="confirm-new-pwd-btn" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg text-xs">Valider</button>
+                <button id="cancel-pwd-btn" data-loader-ignore="true" data-i18n="common.cancel" class="flex-1 py-2.5 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-xs">Annuler</button>
+                <button id="confirm-new-pwd-btn" data-i18n="profile.validate" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg text-xs">Valider</button>
             </div>
         </div>
     </div>
@@ -77,11 +78,11 @@
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-right-from-bracket text-2xl"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Se déconnecter ?</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Vous devrez vous reconnecter pour accéder à vos messages.</p>
+            <h3 data-i18n="profile.logoutTitle" class="text-lg font-bold text-slate-800 dark:text-slate-100">Se déconnecter ?</h3>
+            <p data-i18n="profile.logoutText" class="text-sm text-slate-500 dark:text-slate-400 mt-2">Vous devrez vous reconnecter pour accéder à vos messages.</p>
             <div class="flex gap-3 mt-6">
-                <button id="cancel-logout-btn" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Annuler</button>
-                <button id="confirm-logout-btn" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-700 shadow-lg transition-all">Se déconnecter</button>
+                <button id="cancel-logout-btn" data-loader-ignore="true" data-i18n="common.cancel" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Annuler</button>
+                <button id="confirm-logout-btn" data-i18n="profile.logoutConfirm" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-700 shadow-lg transition-all">Se déconnecter</button>
             </div>
         </div>
     </div>
@@ -98,6 +99,22 @@
             </button>
         </div>
         <input type="file" id="avatar-file-input" accept="image/*" class="hidden">
+    </div>
+
+    <!-- MODAL : SUPPRESSION DÉFINITIVE DU COMPTE -->
+    <div id="delete-account-modal" class="hidden fixed inset-0 z-[110] bg-black/40 flex items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl p-6 modal-animate text-center border border-slate-100 dark:border-slate-700">
+            <div class="w-16 h-16 bg-red-50 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+            </div>
+            <h3 data-i18n="profile.deleteAccountTitle" class="text-lg font-bold text-slate-800 dark:text-slate-100">Supprimer définitivement votre compte ?</h3>
+            <p data-i18n="profile.deleteAccountText" class="text-sm text-slate-500 dark:text-slate-400 mt-2">Cette action est irréversible : votre profil, vos conversations et vos messages seront définitivement effacés. Tapez SUPPRIMER pour confirmer.</p>
+            <input id="delete-account-confirmation" type="text" class="w-full mt-4 bg-slate-50 dark:bg-slate-700 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded-lg py-2.5 px-3 text-sm text-center outline-none focus:ring-2 focus:ring-red-400">
+            <div class="flex gap-3 mt-6">
+                <button id="cancel-delete-account-btn" data-loader-ignore="true" data-i18n="common.cancel" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Annuler</button>
+                <button id="confirm-delete-account-btn" data-i18n="profile.deleteAccountConfirm" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-700 shadow-lg transition-all">Supprimer définitivement</button>
+            </div>
+        </div>
     </div>
 
     <!-- PARTIE 1 : SIDEBAR PC (Visible uniquement sur ordinateur) -->
@@ -135,7 +152,14 @@
                     <div id="header-more-menu" class="hidden absolute right-0 top-6 bg-white dark:bg-slate-800 shadow-2xl rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[180px] text-[12px] z-50">
                         <div id="theme-toggle-btn" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
                             <i id="theme-icon" class="fa-solid fa-moon text-slate-400 text-[11px] w-3"></i>
-                            <span id="theme-label">Mode sombre</span>
+                            <span id="theme-label" data-i18n="profile.themeToggleDark">Mode sombre</span>
+                        </div>
+                        <div class="px-4 py-2.5 flex items-center gap-2.5 text-slate-700 dark:text-slate-200 border-t border-slate-100 dark:border-slate-700">
+                            <i class="fa-solid fa-globe text-slate-400 text-[11px] w-3"></i>
+                            <select id="language-select" class="bg-transparent outline-none cursor-pointer text-[12px] flex-1">
+                                <option value="fr" data-i18n="lang.french">Français</option>
+                                <option value="en" data-i18n="lang.english">English</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -151,7 +175,7 @@
                     <img id="user-avatar-img" src="https://i.pravatar.cc/150?u=me" class="w-24 h-24 rounded-full border-2 border-white shadow-sm object-cover transition group-hover:brightness-90">
                     <span class="absolute bottom-2 right-2 w-5 h-5 bg-green-500 border-[3px] border-white rounded-full"></span>
                 </div>
-                <h1 id="profile-name" class="text-xl font-bold text-slate-800 dark:text-slate-100">Chargement...</h1>
+                <h1 id="profile-name" data-i18n="common.loading" class="text-xl font-bold text-slate-800 dark:text-slate-100">Chargement...</h1>
                 <p id="profile-email" class="text-slate-400 text-xs">...</p>
                 <span id="member-since" class="mt-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-[9px] font-bold px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-800 uppercase tracking-widest">
                    <i class="fa-solid fa-circle-check mr-1"></i> Member since ...
@@ -161,36 +185,36 @@
             <!-- Grille des détails -->
             <div class="grid md:grid-cols-2 gap-4 mb-6">
                 <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl p-4 shadow-sm">
-                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-xs mb-4">Account Details</h3>
+                    <h3 data-i18n="profile.accountDetails" class="font-bold text-slate-800 dark:text-slate-100 text-xs mb-4">Account Details</h3>
                     <div class="space-y-3">
                         <div>
-                            <p class="text-[9px] uppercase font-bold text-slate-400">Username</p>
+                            <p data-i18n="profile.username" class="text-[9px] uppercase font-bold text-slate-400">Username</p>
                             <p id="detail-username" class="text-xs font-medium text-slate-600 dark:text-slate-300">-</p>
                         </div>
                         <div>
-                            <p class="text-[9px] uppercase font-bold text-slate-400">Phone</p>
-                            <p id="detail-phone" class="text-xs font-medium text-slate-600 dark:text-slate-300">Non renseigné</p>
+                            <p data-i18n="profile.phone" class="text-[9px] uppercase font-bold text-slate-400">Phone</p>
+                            <p id="detail-phone" data-i18n="profile.notProvided" class="text-xs font-medium text-slate-600 dark:text-slate-300">Non renseigné</p>
                         </div>
                         <div>
-                            <p class="text-[9px] uppercase font-bold text-slate-400">Language</p>
+                            <p data-i18n="profile.language" class="text-[9px] uppercase font-bold text-slate-400">Language</p>
                             <p class="text-xs font-medium text-slate-600 dark:text-slate-300">English (US)</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl p-4 shadow-sm">
-                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-xs mb-4">Privacy & Security</h3>
+                    <h3 data-i18n="profile.privacySecurity" class="font-bold text-slate-800 dark:text-slate-100 text-xs mb-4">Privacy & Security</h3>
                     <div class="space-y-4 text-xs">
                         <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                            <span><i class="fa-solid fa-shield-halved mr-2"></i> 2FA</span>
-                            <span class="text-blue-600 font-bold uppercase text-[9px]">Enabled</span>
+                            <span><i class="fa-solid fa-shield-halved mr-2"></i> <span data-i18n="profile.twoFactor">2FA</span></span>
+                            <span data-i18n="profile.enabled" class="text-blue-600 font-bold uppercase text-[9px]">Enabled</span>
                         </div>
                         <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                            <span><i class="fa-solid fa-eye mr-2"></i> Active Sessions</span>
+                            <span><i class="fa-solid fa-eye mr-2"></i> <span data-i18n="profile.activeSessions">Active Sessions</span></span>
                             <i class="fa-solid fa-chevron-right text-[9px]"></i>
                         </div>
                         <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                            <span><i class="fa-solid fa-bell mr-2"></i> Alert Preferences</span>
+                            <span><i class="fa-solid fa-bell mr-2"></i> <span data-i18n="profile.alertPreferences">Alert Preferences</span></span>
                             <i class="fa-solid fa-chevron-right text-[9px]"></i>
                         </div>
                     </div>
@@ -199,32 +223,33 @@
 
             <!-- Boutons d'actions -->
             <div class="flex flex-col items-center space-y-3">
-                <button id="edit-profile-btn" class="w-full max-w-xs bg-blue-600 text-white py-2.5 rounded-lg font-bold text-xs"><i class="fa-solid fa-pen mr-2"></i>Edit Profile</button>
-                <button id="change-password-btn" class="w-full max-w-xs bg-slate-200/50 dark:bg-slate-700 text-slate-600 dark:text-slate-200 py-2.5 rounded-lg font-bold text-xs"><i class="fa-solid fa-key mr-2"></i>Change Password</button>
-                <button id="logout-btn" class="text-red-500 font-bold text-xs mt-2 hover:underline"><i class="fa-solid fa-right-from-bracket mr-2"></i>Logout</button>
+                <button id="edit-profile-btn" class="w-full max-w-xs bg-blue-600 text-white py-2.5 rounded-lg font-bold text-xs"><i class="fa-solid fa-pen mr-2"></i><span data-i18n="profile.editProfileBtn">Edit Profile</span></button>
+                <button id="change-password-btn" class="w-full max-w-xs bg-slate-200/50 dark:bg-slate-700 text-slate-600 dark:text-slate-200 py-2.5 rounded-lg font-bold text-xs"><i class="fa-solid fa-key mr-2"></i><span data-i18n="profile.changePasswordBtn">Change Password</span></button>
+                <button id="delete-account-btn" class="w-full max-w-xs bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900 text-red-500 py-2.5 rounded-lg font-bold text-xs"><i class="fa-solid fa-user-slash mr-2"></i><span data-i18n="profile.deleteAccountBtn">Supprimer mon compte</span></button>
+                <button id="logout-btn" class="text-red-500 font-bold text-xs mt-2 hover:underline"><i class="fa-solid fa-right-from-bracket mr-2"></i><span data-i18n="profile.logoutBtn">Logout</span></button>
             </div>
 
-            <p class="text-center text-[9px] text-slate-300 dark:text-slate-600 mt-8">Kadea Chat v1.0.0 — Encryption Active</p>
+            <p data-i18n="profile.footer" class="text-center text-[9px] text-slate-300 dark:text-slate-600 mt-8">Kadea Chat v1.0.0 — Encryption Active</p>
         </div>
 
         <!-- BARRE DE NAVIGATION MOBILE (Fixe en bas - Style WhatsApp) -->
         <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-around items-center py-3 z-50">
             <a href="chat.html" class="flex flex-col items-center text-slate-400">
                 <i class="fa-solid fa-message text-xl"></i>
-                <span class="text-[10px] mt-1">Discussions</span>
+                <span data-i18n="nav.chats" class="text-[10px] mt-1">Discussions</span>
             </a>
             <div class="flex flex-col items-center text-slate-400">
                 <i class="fa-solid fa-phone text-xl"></i>
-                <span class="text-[10px] mt-1">Appels</span>
+                <span data-i18n="nav.calls" class="text-[10px] mt-1">Appels</span>
             </div>
             <a href="users.html" class="flex flex-col items-center text-slate-400">
                 <i class="fa-solid fa-user-group text-xl"></i>
-                <span class="text-[10px] mt-1">Utilisateurs</span>
+                <span data-i18n="nav.members" class="text-[10px] mt-1">Utilisateurs</span>
             </a>
             <div class="flex flex-col items-center text-blue-600">
                 <!-- Icône Profil active -->
                 <i class="fa-solid fa-gear text-xl"></i>
-                <span class="text-[10px] font-bold mt-1">Profil</span>
+                <span data-i18n="nav.profile" class="text-[10px] font-bold mt-1">Profil</span>
             </div>
         </nav>
 

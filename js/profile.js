@@ -1,6 +1,9 @@
 // --- CONFIGURATION ---
 import { apiRequest } from './api.js';
+import { applyAvatarByIds, resolveAvatarUrl } from './avatar.js';
 const TOKEN = localStorage.getItem('token');
+
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
 
 let currentUserData = null;
 
@@ -13,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEditProfileModal();
     initChangePasswordModal();
     initLogoutModal();
+    initDeleteAccountModal();
     initAvatarModal();
 });
 
@@ -43,6 +47,23 @@ function showToast(message, type = 'error') {
     }, 3000);
 }
 
+function setButtonLoading(button, loading, label) {
+    label = label || t('common.loading');
+    if (!button) return;
+    if (loading) {
+        button.dataset.originalHtml = button.innerHTML;
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.classList.add('opacity-70', 'cursor-wait');
+        button.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>${label}`;
+    } else {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.classList.remove('opacity-70', 'cursor-wait');
+        if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
+    }
+}
+
 // --- PRÉFÉRENCES LOCALES SCOPÉES PAR UTILISATEUR ---
 // (l'API ne gère pas l'email affiché différemment de l'email de connexion,
 //  donc on le garde en local — mais lié à l'id de l'utilisateur pour éviter
@@ -61,10 +82,6 @@ function setProfileOverrides(userId, partial) {
     localStorage.setItem(`profileOverrides_${userId}`, JSON.stringify(current));
 }
 
-function getMyAvatarUrl(userId, apiAvatarUrl) {
-    return localStorage.getItem(`myAvatarUrl_${userId}`) || apiAvatarUrl || 'https://i.pravatar.cc/150?u=me';
-}
-
 // --- THÈME (mode sombre / clair) ---
 
 function applyTheme(theme) {
@@ -75,7 +92,7 @@ function applyTheme(theme) {
         icon.classList.toggle('fa-moon', theme !== 'dark');
         icon.classList.toggle('fa-sun', theme === 'dark');
     }
-    if (label) label.textContent = theme === 'dark' ? 'Mode clair' : 'Mode sombre';
+    if (label) label.textContent = theme === 'dark' ? t('profile.themeToggleLight') : t('profile.themeToggleDark');
 }
 
 function initTheme() {
@@ -102,21 +119,20 @@ async function loadFullProfile() {
             document.getElementById('profile-name').textContent = user.fullName;
             document.getElementById('profile-email').textContent = overrides.email || user.email;
             document.getElementById('detail-username').textContent = user.fullName.toLowerCase().replace(/\s/g, '_');
-            document.getElementById('detail-phone').textContent = user.bio || "Non renseigné";
+            document.getElementById('detail-phone').textContent = user.bio || t('profile.notProvided');
 
-            const avatarUrl = getMyAvatarUrl(userId, user.avatarUrl);
-            document.getElementById('user-avatar-img').src = avatarUrl;
-            document.getElementById('avatar-preview-img').src = avatarUrl;
+            const avatarUrl = resolveAvatarUrl(userId, user.avatarUrl, user.fullName);
+            applyAvatarByIds(['user-avatar-img', 'avatar-preview-img'], avatarUrl);
 
             const date = new Date(user.createdAt);
             const formattedDate = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-            document.getElementById('member-since').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Member since ${escapeHtml(formattedDate)}`;
+            document.getElementById('member-since').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${t('profile.memberSince')} ${escapeHtml(formattedDate)}`;
         } else {
-            showToast("Impossible de charger votre profil.", 'error');
+            showToast(t('profile.profileLoadError'), 'error');
         }
     } catch (err) {
         console.error("Erreur profil:", err);
-        showToast("Erreur réseau : profil indisponible.", 'error');
+        showToast(t('profile.networkError'), 'error');
     }
 }
 
@@ -158,31 +174,35 @@ function initEditProfileModal() {
     document.getElementById('cancel-edit-profile-btn').onclick = () => modal.classList.add('hidden');
 
     document.getElementById('save-profile-btn').onclick = async () => {
+        const saveButton = document.getElementById('save-profile-btn');
         const fullName = document.getElementById('edit-fullname').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
         const userId = currentUserData?.id || currentUserData?._id;
 
-        if (!fullName) { showToast("Le nom complet est requis.", 'error'); return; }
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast("Adresse email invalide.", 'error'); return; }
+        if (!fullName) { showToast(t('profile.fullNameRequired'), 'error'); return; }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast(t('profile.invalidEmail'), 'error'); return; }
 
         try {
+            setButtonLoading(saveButton, true, t('common.save') + '...');
             // Le téléphone est stocké côté serveur dans le champ "bio" (documenté par l'API)
             // => persistant sur tous les appareils, contrairement à un stockage local.
             const apiResult = await apiRequest('/users/me', {
                 method: 'PATCH',
                 body: JSON.stringify({ fullName, bio: phone })
             });
-            if (!apiResult.status) throw new Error('Échec de la mise à jour');
+            if (!apiResult.status) throw new Error(t('profile.updateError'));
 
             // L'email affiché reste local : l'API ne permet pas de changer l'email de connexion.
             setProfileOverrides(userId, { email });
-            showToast('Profil mis à jour.', 'success');
+            showToast(t('profile.updateSuccess'), 'success');
             modal.classList.add('hidden');
             await loadFullProfile();
         } catch (err) {
             console.error(err);
-            showToast("Impossible de mettre à jour le profil.", 'error');
+            showToast(t('profile.updateError'), 'error');
+        } finally {
+            setButtonLoading(saveButton, false);
         }
     };
 }
@@ -191,10 +211,10 @@ function initEditProfileModal() {
 
 // Mêmes règles que sur inscription/réinitialisation : cohérence dans toute l'app
 const PASSWORD_RULES = [
-    { test: (pwd) => pwd.length >= 8, message: "Le mot de passe doit contenir au moins 8 caractères." },
-    { test: (pwd) => /[A-Z]/.test(pwd), message: "Le mot de passe doit contenir au moins une majuscule." },
-    { test: (pwd) => /[0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un chiffre." },
-    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un caractère spécial." }
+    { test: (pwd) => pwd.length >= 8, key: 'pwd.rule8' },
+    { test: (pwd) => /[A-Z]/.test(pwd), key: 'pwd.ruleUpper' },
+    { test: (pwd) => /[0-9]/.test(pwd), key: 'pwd.ruleDigit' },
+    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), key: 'pwd.ruleSpecial' }
 ];
 
 function initChangePasswordModal() {
@@ -213,27 +233,31 @@ function initChangePasswordModal() {
     document.getElementById('cancel-pwd-btn').onclick = () => modal.classList.add('hidden');
 
     document.getElementById('confirm-new-pwd-btn').onclick = async () => {
+        const confirmButton = document.getElementById('confirm-new-pwd-btn');
         const oldPassword = document.getElementById('pwd-old').value;
         const newPassword = document.getElementById('pwd-new').value;
         const confirmPwd = document.getElementById('pwd-confirm').value;
 
-        if (!oldPassword || !newPassword || !confirmPwd) { showToast("Veuillez remplir tous les champs.", 'error'); return; }
-        if (newPassword !== confirmPwd) { showToast("Les mots de passe ne correspondent pas.", 'error'); return; }
+        if (!oldPassword || !newPassword || !confirmPwd) { showToast(t('profile.fillAllFields'), 'error'); return; }
+        if (newPassword !== confirmPwd) { showToast(t('profile.passwordMismatch'), 'error'); return; }
 
         const failedRule = PASSWORD_RULES.find(rule => !rule.test(newPassword));
-        if (failedRule) { showToast(failedRule.message, 'error'); return; }
+        if (failedRule) { showToast(t(failedRule.key), 'error'); return; }
 
         try {
+            setButtonLoading(confirmButton, true, t('common.loading'));
             const apiResult = await apiRequest('/auth/change-password', {
                 method: 'POST',
                 body: JSON.stringify({ oldPassword, newPassword })
             });
-            if (!apiResult.status) throw new Error(apiResult.body?.message || 'Échec du changement de mot de passe');
-            showToast('Mot de passe modifié avec succès.', 'success');
+            if (!apiResult.status) throw new Error(apiResult.body?.message || t('profile.wrongOldPassword'));
+            showToast(t('profile.passwordChanged'), 'success');
             modal.classList.add('hidden');
         } catch (err) {
             console.error(err);
-            showToast(err.message || "Mot de passe actuel incorrect.", 'error');
+            showToast(err.message || t('profile.wrongOldPassword'), 'error');
+        } finally {
+            setButtonLoading(confirmButton, false);
         }
     };
 }
@@ -259,6 +283,50 @@ function initLogoutModal() {
     };
 }
 
+function clearDeletedAccountData(userId) {
+    [
+        'token', 'user', 'lastUserId', 'autoOpenConvId', 'autoOpenConvName',
+        'archivedConversationIds', 'resetPasswordEmail',
+        `myAvatarUrl_${userId}`, `myFullName_${userId}`, `profileOverrides_${userId}`
+    ].forEach(key => localStorage.removeItem(key));
+}
+
+function initDeleteAccountModal() {
+    const modal = document.getElementById('delete-account-modal');
+    const confirmation = document.getElementById('delete-account-confirmation');
+    const confirmButton = document.getElementById('confirm-delete-account-btn');
+
+    document.getElementById('delete-account-btn').onclick = () => {
+        confirmation.value = '';
+        modal.classList.remove('hidden');
+        confirmation.focus();
+    };
+    document.getElementById('cancel-delete-account-btn').onclick = () => modal.classList.add('hidden');
+    modal.addEventListener('click', event => { if (event.target === modal) modal.classList.add('hidden'); });
+
+    confirmButton.onclick = async () => {
+        if (confirmation.value.trim().toUpperCase() !== t('profile.confirmWord')) {
+            showToast(t('profile.typeDeleteToConfirm'), 'error');
+            confirmation.focus();
+            return;
+        }
+
+        try {
+            setButtonLoading(confirmButton, true, t('profile.deleteAccountConfirm') + '...');
+            const apiResult = await apiRequest('/users/me', { method: 'DELETE' });
+            if (!apiResult.status) throw new Error(apiResult.body?.message || t('profile.deleteAccountError'));
+
+            const userId = currentUserData?.id || currentUserData?._id;
+            clearDeletedAccountData(userId);
+            window.location.href = 'index.html';
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || t('profile.deleteAccountError'), 'error');
+            setButtonLoading(confirmButton, false);
+        }
+    };
+}
+
 // --- MODAL : PHOTO DE PROFIL (style WhatsApp) ---
 
 function initAvatarModal() {
@@ -280,7 +348,7 @@ function initAvatarModal() {
             localStorage.setItem(`myAvatarUrl_${userId}`, dataUrl);
             document.getElementById('user-avatar-img').src = dataUrl;
             document.getElementById('avatar-preview-img').src = dataUrl;
-            showToast('Photo de profil mise à jour.', 'success');
+            showToast(t('profile.avatarUpdated'), 'success');
 
             // Tentative de sauvegarde côté serveur (champ documenté par l'API)
             try {
@@ -294,7 +362,7 @@ function initAvatarModal() {
             }
         } catch (err) {
             console.error(err);
-            showToast("Impossible de charger cette image.", 'error');
+            showToast(t('profile.avatarError'), 'error');
         }
     };
 }

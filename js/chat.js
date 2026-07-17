@@ -1,5 +1,8 @@
 // --- 1. CONFIGURATION ---
 import { apiRequest } from './api.js';
+
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
+import { applyAvatarToElement, resolveAvatarUrl } from './avatar.js';
 const TOKEN = localStorage.getItem('token');
 
 let currentUser = null;
@@ -56,7 +59,7 @@ function archiveConversation(id) {
         archived.push(strId);
         localStorage.setItem('archivedConversationIds', JSON.stringify(archived));
     }
-    showToast('Conversation archivée.', 'success');
+    showToast(t('chat.convArchived'), 'success');
     window.location.href = 'archiver.html';
 }
 
@@ -151,14 +154,14 @@ async function loadUserProfile() {
             document.getElementById('user-fullname-display').textContent = currentUser.fullName;
             const avatarImg = document.getElementById('user-avatar-img');
             if (avatarImg) {
-                avatarImg.src = localStorage.getItem(`myAvatarUrl_${userId}`) || currentUser.avatarUrl || 'https://i.pravatar.cc/100?u=me';
+                applyAvatarToElement(avatarImg, resolveAvatarUrl(userId, currentUser.avatarUrl, currentUser.fullName));
             }
         } else {
-            showToast("Impossible de charger votre profil.", 'error');
+            showToast(t('chat.profileLoadError'), 'error');
         }
     } catch (err) {
         console.error(err);
-        showToast("Erreur réseau : profil indisponible.", 'error');
+        showToast(t('chat.networkError'), 'error');
     }
 }
 
@@ -171,10 +174,10 @@ async function loadConversations() {
             cachedConversations = result.data.conversations || [];
             renderConversations(cachedConversations);
         }
-        else showToast("Impossible de charger les conversations.", 'error');
+        else showToast(t('chat.convLoadError'), 'error');
     } catch (err) {
         console.error(err);
-        showToast("Erreur réseau : conversations indisponibles.", 'error');
+        showToast(t('chat.convNetworkError'), 'error');
     }
 }
 
@@ -208,11 +211,11 @@ window.createNewConversation = async function(userId, userName) {
             const newId = result.data.id || result.data._id;
             window.openConversation(newId, userName);
         } else {
-            showToast("Impossible de créer la conversation.", 'error');
+            showToast(t('chat.convCreateError'), 'error');
         }
     } catch (err) {
         console.error(err);
-        showToast("Erreur réseau : conversation impossible à créer.", 'error');
+        showToast(t('chat.convCreateNetworkError'), 'error');
     }
 }
 
@@ -222,7 +225,7 @@ function resetChatToEmptyState() {
     document.getElementById('chat-content').classList.remove('flex');
     document.getElementById('chat-empty-state').classList.remove('hidden');
     document.getElementById('messages-container').innerHTML = "";
-    document.getElementById('chat-contact-name').textContent = "Sélectionnez un contact";
+    document.getElementById('chat-contact-name').textContent = t('chat.selectContact');
 }
 
 window.openConversation = async function(convId, title) {
@@ -255,11 +258,11 @@ window.openConversation = async function(convId, title) {
             renderMessages(result.data.messages || []);
             document.getElementById('message-input').focus(); // curseur direct dans le champ de saisie
         } else {
-            showToast("Cette conversation est introuvable.", 'error');
+            showToast(t('chat.convNotFound'), 'error');
         }
     } catch (err) {
         console.error(err);
-        showToast("Erreur réseau : conversation indisponible.", 'error');
+        showToast(t('chat.convUnavailable'), 'error');
     }
 }
 
@@ -267,8 +270,13 @@ async function sendMessage() {
     const input = document.getElementById('message-input');
     const content = input.value.trim();
     if (!content || !activeConversationId) return;
+    const sendButton = document.getElementById('send-btn');
+    const originalHtml = sendButton.innerHTML;
 
     try {
+        sendButton.disabled = true;
+        sendButton.setAttribute('aria-busy', 'true');
+        sendButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
         const apiResult = await apiRequest(`/conversations/${activeConversationId}/messages`, {
             method: 'POST',
             body: JSON.stringify({ content })
@@ -279,7 +287,11 @@ async function sendMessage() {
         loadConversations();
     } catch (err) {
         console.error(err);
-        showToast("Le message n'a pas pu être envoyé.", 'error');
+        showToast(t('chat.sendMessageError'), 'error');
+    } finally {
+        sendButton.disabled = false;
+        sendButton.removeAttribute('aria-busy');
+        sendButton.innerHTML = originalHtml;
     }
 }
 
@@ -302,7 +314,7 @@ function renderConversations(conversations) {
     }
     
     if (visibleConversations.length === 0) {
-        html += '<p class="p-8 text-center text-[10px] text-slate-300 dark:text-slate-600 italic">Aucune conversation.</p>';
+        html += `<p class="p-8 text-center text-[10px] text-slate-300 dark:text-slate-600 italic">${t('chat.noConversations')}</p>`;
     }
     container.innerHTML = html;
 
@@ -311,7 +323,7 @@ function renderConversations(conversations) {
         const other = conv.participants?.find(p => String(p.userId || p.id || p._id) !== myId);
         let name = other ? (other.user?.fullName || other.fullName) : "Utilisateur";
         const id = conv.id || conv._id;
-        const lastMsg = conv.lastMessage?.content || "Discussion vide";
+        const lastMsg = conv.lastMessage?.content || t('chat.emptyConversation');
         const date = conv.lastMessage ? new Date(conv.lastMessage.createdAt) : new Date(conv.createdAt);
         const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
@@ -336,7 +348,7 @@ function renderMessages(messages) {
     const container = document.getElementById('messages-container');
     if (!container) return;
     const msgsArray = Array.isArray(messages) ? messages : (messages.messages || []);
-    container.innerHTML = '<div class="flex justify-center mb-6"><span class="bg-slate-50 dark:bg-slate-800 text-slate-400 text-[9px] font-bold px-3 py-1 rounded-full uppercase">Aujourd\'hui</span></div>';
+    container.innerHTML = `<div class="flex justify-center mb-6"><span class="bg-slate-50 dark:bg-slate-800 text-slate-400 text-[9px] font-bold px-3 py-1 rounded-full uppercase">${t('chat.today')}</span></div>`;
     msgsArray.forEach(msg => {
         const isMe = String(msg.senderId) === String(currentUser.id || currentUser._id);
         const msgId = msg.id || msg._id;
@@ -355,7 +367,7 @@ async function triggerSearch(query) {
         const found = (result.data?.users || result.data || []).filter(u => u.fullName.toLowerCase().includes(query.toLowerCase()) && String(u.id || u._id) !== String(currentUser.id));
         const container = document.getElementById('conversations-list');
         if (container) {
-            container.innerHTML = '<div class="p-3 text-[9px] font-bold text-blue-600 uppercase bg-blue-50/30 dark:bg-blue-900/20">Résultats :</div>';
+            container.innerHTML = `<div class="p-3 text-[9px] font-bold text-blue-600 uppercase bg-blue-50/30 dark:bg-blue-900/20">${t('chat.searchResults')}</div>`;
             found.forEach(u => {
                 const safeName = String(u.fullName).replace(/'/g, "\\'");
                 container.insertAdjacentHTML('beforeend', `<div onclick="window.createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-50 dark:border-slate-800"><div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase">${String(u.fullName).substring(0,2)}</div><h4 class="font-bold text-slate-800 dark:text-slate-100 text-[11px]">${u.fullName}</h4></div>`);
@@ -402,7 +414,7 @@ async function deleteConversationById(id) {
         loadConversations();
     } catch (err) {
         console.error(err);
-        showToast("Impossible de supprimer la conversation.", 'error');
+        showToast(t('chat.deleteConvError'), 'error');
     }
 }
 
@@ -529,7 +541,7 @@ window.saveEditedMessage = async function(msgId, newContent) {
         loadConversations();
     } catch (err) {
         console.error("Erreur modification message:", err);
-        showToast("Impossible de modifier ce message.", 'error');
+        showToast(t('chat.editMessageError'), 'error');
         editingMessageId = null;
         silentRefreshMessages();
     }
@@ -543,7 +555,7 @@ window.deleteMessage = async function(msgId) {
         loadConversations();
     } catch (err) {
         console.error("Erreur suppression message:", err);
-        showToast("Impossible de supprimer ce message.", 'error');
+        showToast(t('chat.deleteMessageError'), 'error');
     }
 }
 

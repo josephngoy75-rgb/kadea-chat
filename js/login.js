@@ -1,5 +1,7 @@
 import { apiRequest } from './api.js';
 
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
+
 const UI = {
     form: document.getElementById('loginForm'),
     error: document.getElementById('errorMessage'),
@@ -14,7 +16,7 @@ const loginUser = async (credentials) => {
         method: 'POST',
         body: JSON.stringify(credentials)
     });
-    if (!apiResult.status) throw new Error(apiResult.body.message || "Identifiants incorrects");
+    if (!apiResult.status) throw new Error(apiResult.body.message || t('login.defaultError'));
     return apiResult.body;
 };
 
@@ -36,14 +38,21 @@ try {
         if (result.data && result.data.token) {
             localStorage.setItem('token', result.data.token);
             localStorage.setItem('user', JSON.stringify(result.data.user));
+            const user = result.data.user || {};
+            const userId = user.id || user._id;
+            if (userId) {
+                localStorage.setItem('lastUserId', userId);
+                if (user.fullName) localStorage.setItem(`myFullName_${userId}`, user.fullName);
+                if (user.avatarUrl) localStorage.setItem(`myAvatarUrl_${userId}`, user.avatarUrl);
+            }
 
-            displayStatus("Connexion réussie ! Ravie de vous revoir.", true);
+            displayStatus(t('login.success'), true);
             
             setTimeout(() => {
                 window.location.href = 'chat.html';
             }, 1500);
         } else {
-            throw new Error("Le serveur n'a pas renvoyé de données valides.");
+            throw new Error(t('login.serverError'));
         }
 
     } catch (err) {
@@ -64,7 +73,7 @@ const displayStatus = (msg, isSuccess = false) => {
 
 const setLoading = (state) => {
     UI.button.disabled = state;
-    UI.button.innerHTML = state ? "Connexion..." : "Login";
+    UI.button.innerHTML = state ? `<span>${t('login.loadingLabel')}</span>` : `<span data-i18n="login.button">${t('login.button')}</span>`;
 };
 
 // Toggle Password

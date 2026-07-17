@@ -1,5 +1,7 @@
 // --- 1. CONFIGURATION ---
 import { apiRequest } from './api.js';
+
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
 const TOKEN = localStorage.getItem('token');
 
 let currentUser = null;
@@ -57,7 +59,7 @@ function unarchiveConversation(id) {
     const strId = String(id);
     const archived = getArchivedIds().filter(a => a !== strId);
     localStorage.setItem('archivedConversationIds', JSON.stringify(archived));
-    showToast('Conversation désarchivée.', 'success');
+    showToast(t('chat.convUnarchived'), 'success');
     loadArchivedConversations();
 }
 
@@ -75,10 +77,10 @@ async function loadUserProfile() {
                 localStorage.setItem('lastUserId', userId);
             }
         }
-        else showToast("Impossible de charger votre profil.", 'error');
+        else showToast(t('chat.profileLoadError'), 'error');
     } catch (err) {
         console.error(err);
-        showToast("Erreur réseau : profil indisponible.", 'error');
+        showToast(t('chat.networkError'), 'error');
     }
 }
 
@@ -86,19 +88,19 @@ async function loadArchivedConversations() {
     const archivedIds = getArchivedIds();
     const container = document.getElementById('archived-list');
     if (archivedIds.length === 0) {
-        container.innerHTML = '<p class="p-8 text-center text-[11px] text-slate-300 dark:text-slate-600 italic">Aucune conversation archivée.</p>';
+        container.innerHTML = `<p class="p-8 text-center text-[11px] text-slate-300 dark:text-slate-600 italic">${t('archiver.noConversations')}</p>`;
         return;
     }
     try {
         const apiResult = await apiRequest('/conversations');
         const result = apiResult.body;
-        if (!apiResult.status) { showToast("Impossible de charger les archives.", 'error'); return; }
+        if (!apiResult.status) { showToast(t('archiver.loadError'), 'error'); return; }
         const all = result.data.conversations || [];
         const archived = all.filter(conv => archivedIds.includes(String(conv.id || conv._id)));
         renderArchivedList(archived);
     } catch (err) {
         console.error(err);
-        showToast("Erreur réseau : archives indisponibles.", 'error');
+        showToast(t('archiver.networkError'), 'error');
     }
 }
 
@@ -113,7 +115,7 @@ async function deleteConversationById(id) {
         loadArchivedConversations();
     } catch (err) {
         console.error(err);
-        showToast("Impossible de supprimer la conversation.", 'error');
+        showToast(t('chat.deleteConvError'), 'error');
     }
 }
 
@@ -122,7 +124,7 @@ async function deleteConversationById(id) {
 function renderArchivedList(conversations) {
     const container = document.getElementById('archived-list');
     if (conversations.length === 0) {
-        container.innerHTML = '<p class="p-8 text-center text-[11px] text-slate-300 dark:text-slate-600 italic">Aucune conversation archivée.</p>';
+        container.innerHTML = `<p class="p-8 text-center text-[11px] text-slate-300 dark:text-slate-600 italic">${t('archiver.noConversations')}</p>`;
         return;
     }
     container.innerHTML = "";

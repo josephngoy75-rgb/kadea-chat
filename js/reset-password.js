@@ -1,5 +1,7 @@
 import { apiRequest } from './api.js';
 
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
+
 const UI = {
     form: document.getElementById('resetForm'),
     error: document.getElementById('errorMessage'),
@@ -14,15 +16,15 @@ const UI = {
 
 // Mêmes règles que sur la page d'inscription : cohérence dans toute l'app
 const PASSWORD_RULES = [
-    { test: (pwd) => pwd.length >= 8, message: "Le mot de passe doit contenir au moins 8 caractères." },
-    { test: (pwd) => /[A-Z]/.test(pwd), message: "Le mot de passe doit contenir au moins une majuscule." },
-    { test: (pwd) => /[0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un chiffre." },
-    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un caractère spécial." }
+    { test: (pwd) => pwd.length >= 8, key: 'pwd.rule8' },
+    { test: (pwd) => /[A-Z]/.test(pwd), key: 'pwd.ruleUpper' },
+    { test: (pwd) => /[0-9]/.test(pwd), key: 'pwd.ruleDigit' },
+    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), key: 'pwd.ruleSpecial' }
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
     const email = localStorage.getItem('resetPasswordEmail');
-    if (UI.targetEmail) UI.targetEmail.textContent = email || "votre adresse email";
+    if (UI.targetEmail) UI.targetEmail.textContent = email || t('reset.defaultEmail');
 });
 
 const displayStatus = (msg, isSuccess = false) => {
@@ -36,16 +38,18 @@ const displayStatus = (msg, isSuccess = false) => {
 
 const setLoading = (state) => {
     UI.button.disabled = state;
-    UI.button.innerHTML = state ? '<i class="fas fa-spinner fa-spin"></i> Validation...' : "Réinitialiser le mot de passe";
+    UI.button.innerHTML = state
+        ? `<i class="fas fa-spinner fa-spin"></i> ${t('reset.loadingLabel')}`
+        : `<span data-i18n="reset.button">${t('reset.button')}</span>`;
 };
 
 const validateForm = (data) => {
-    if (!data.code || !data.newPassword || !data.confirmPassword) return "Veuillez remplir tous les champs.";
-    if (!/^\d{6}$/.test(data.code)) return "Le code doit contenir 6 chiffres.";
-    if (data.newPassword !== data.confirmPassword) return "Les mots de passe ne correspondent pas.";
+    if (!data.code || !data.newPassword || !data.confirmPassword) return t('reset.fillAllFields');
+    if (!/^\d{6}$/.test(data.code)) return t('reset.codeInvalid');
+    if (data.newPassword !== data.confirmPassword) return t('reset.passwordMismatch');
 
     const failedRule = PASSWORD_RULES.find(rule => !rule.test(data.newPassword));
-    if (failedRule) return failedRule.message;
+    if (failedRule) return t(failedRule.key);
 
     return null;
 };
@@ -55,7 +59,7 @@ const resetPassword = async (payload) => {
         method: 'POST',
         body: JSON.stringify(payload)
     });
-    if (!apiResult.status) throw new Error(apiResult.body.message || "Code invalide ou expiré.");
+    if (!apiResult.status) throw new Error(apiResult.body.message || t('reset.defaultError'));
     return apiResult.body;
 };
 
@@ -86,7 +90,7 @@ const handleSubmit = async (e) => {
         await resetPassword({ code: formData.code, newPassword: formData.newPassword });
 
         localStorage.removeItem('resetPasswordEmail');
-        displayStatus("Mot de passe réinitialisé avec succès ! Redirection...", true);
+        displayStatus(t('reset.success'), true);
         setTimeout(() => {
             window.location.href = 'login.html';
         }, 1500);

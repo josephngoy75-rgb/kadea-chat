@@ -38,4 +38,4 @@ export function applyAvatarToElement(el, url) {
 
 export function applyAvatarByIds(ids, url) {
     ids.forEach(id => applyAvatarToElement(document.getElementById(id), url));
-}                        
+}
