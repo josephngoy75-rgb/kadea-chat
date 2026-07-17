@@ -147,7 +147,12 @@ function initHeaderMenu() {
         e.stopPropagation();
         moreMenu.classList.toggle('hidden');
     };
-    document.addEventListener('click', () => moreMenu.classList.add('hidden'));
+    // Ferme le menu si on clique EN DEHORS, MAIS pas si on clique sur le <select> de langue
+    document.addEventListener('click', (e) => {
+        if (!moreMenu.contains(e.target) && e.target !== moreBtn) {
+            moreMenu.classList.add('hidden');
+        }
+    });
 
     document.getElementById('theme-toggle-btn').onclick = () => {
         const current = localStorage.getItem('theme') || 'light';
@@ -156,6 +161,16 @@ function initHeaderMenu() {
         applyTheme(next);
         moreMenu.classList.add('hidden');
     };
+
+    // Mettre à jour le libellé de langue dans la carte profil
+    _updateLanguageLabel();
+}
+
+function _updateLanguageLabel() {
+    const el = document.getElementById('detail-language');
+    if (!el) return;
+    const lang = localStorage.getItem('lang') || 'fr';
+    el.textContent = lang === 'fr' ? t('lang.french') : t('lang.english');
 }
 
 // --- MODAL : MODIFIER LE PROFIL ---

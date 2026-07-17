@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>document.documentElement.classList.toggle('dark', (localStorage.getItem('theme') || 'light') === 'dark');</script>
     <script src="js/i18n.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Kadea Chat - Communauté</title>
@@ -15,33 +17,33 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-white h-screen flex overflow-hidden text-slate-900">
+<body class="bg-white dark:bg-slate-900 h-screen flex overflow-hidden text-slate-900 dark:text-slate-100 transition-colors">
 
     <!-- NOTIFICATIONS INTERNES (toasts) -->
     <div id="toast-container" class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 items-center pointer-events-none w-full px-4"></div>
 
     <!-- BARRE GAUCHE (PC) -->
-    <aside class="hidden md:flex w-[68px] flex-col items-center py-6 border-r border-slate-200 bg-white flex-shrink-0">
+    <aside class="hidden md:flex w-[68px] flex-col items-center py-6 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0">
         <div class="space-y-7 flex flex-col items-center flex-1">
             <div class="text-blue-600 text-2xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
             <a href="chat.html" class="text-slate-300 hover:text-blue-600 text-lg"><i class="fa-solid fa-message"></i></a>
             <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
-            <a href="users.html" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100"><i class="fa-solid fa-user-group text-sm"></i></a>
+            <a href="users.html" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100 dark:shadow-none"><i class="fa-solid fa-user-group text-sm"></i></a>
             <a href="archiver.html" class="text-slate-300 hover:text-blue-600 text-lg"><i class="fa-solid fa-box-archive"></i></a>
         </div>
         <a href="profile.html" class="text-slate-300 hover:text-blue-600 text-lg mb-2"><i class="fa-solid fa-gear"></i></a>
     </aside>
 
     <!-- CONTENU PRINCIPAL -->
-    <main class="flex-1 flex flex-col bg-white overflow-hidden relative">
+    <main class="flex-1 flex flex-col bg-white dark:bg-slate-900 overflow-hidden relative">
         
         <!-- Header & Recherche -->
         <div class="p-4 border-b border-slate-50">
-            <h1 data-i18n="users.title" class="text-xl font-extrabold text-slate-800 mb-4">Communauté</h1>
+            <h1 data-i18n="users.title" class="text-xl font-extrabold text-slate-800 dark:text-slate-100 mb-4">Communauté</h1>
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm"></i>
                 <input type="text" id="user-search" data-i18n-placeholder="users.searchPlaceholder" placeholder="Rechercher un apprenant..." 
-                       class="w-full bg-slate-100 border-none rounded-2xl py-3 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                       class="w-full bg-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 border-none rounded-2xl py-3 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all">
             </div>
         </div>
 
@@ -70,7 +72,7 @@
         </div>
 
         <!-- NAV MOBILE (STYLE WHATSAPP) -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-center py-3 z-50">
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-around items-center py-3 z-50">
             <a href="chat.html" class="flex flex-col items-center text-slate-400">
                 <i class="fa-solid fa-message text-xl"></i>
                 <span data-i18n="nav.chats" class="text-[10px] mt-1">Discussions</span>

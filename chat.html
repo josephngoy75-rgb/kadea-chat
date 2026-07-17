@@ -23,15 +23,15 @@
 
     <!-- MODAL DE SUPPRESSION -->
     <div id="delete-modal" class="hidden fixed inset-0 z-[110] bg-black/40 flex items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 modal-animate text-center border border-slate-100">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl shadow-2xl dark:shadow-none p-6 modal-animate text-center border border-slate-100 dark:border-slate-700">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="fa-solid fa-trash-can text-2xl"></i>
             </div>
-            <h3 id="delete-modal-title" class="text-lg font-bold text-slate-800">Supprimer la discussion ?</h3>
-            <p id="delete-modal-text" class="text-sm text-slate-500 mt-2">Cette action est définitive.</p>
+            <h3 id="delete-modal-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">Supprimer la discussion ?</h3>
+            <p id="delete-modal-text" class="text-sm text-slate-500 dark:text-slate-400 mt-2">Cette action est définitive.</p>
             <div class="flex gap-3 mt-6">
-                <button onclick="closeDeleteModal()" data-loader-ignore="true" data-i18n="common.cancel" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50 hover:bg-slate-200 transition-all">Annuler</button>
-                <button id="confirm-delete-btn" data-i18n="common.delete" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-700 shadow-lg transition-all">Supprimer</button>
+                <button onclick="closeDeleteModal()" data-loader-ignore="true" data-i18n="common.cancel" class="flex-1 py-3 rounded-xl font-bold text-slate-400 bg-slate-50 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all">Annuler</button>
+                <button id="confirm-delete-btn" data-i18n="common.delete" class="flex-1 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-700 shadow-lg dark:shadow-none transition-all">Supprimer</button>
             </div>
         </div>
     </div>
@@ -40,58 +40,58 @@
     <div id="toast-container" class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 items-center pointer-events-none w-full px-4"></div>
 
     <!-- MENU CONTEXTUEL CONVERSATION (clic droit / appui long dans la liste) -->
-    <div id="conv-context-menu" class="hidden fixed z-[120] bg-white shadow-2xl rounded-xl border border-slate-100 py-1.5 min-w-[170px] text-[12px] no-select">
-        <div id="conv-ctx-archive" class="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 text-slate-700">
+    <div id="conv-context-menu" class="hidden fixed z-[120] bg-white dark:bg-slate-800 shadow-2xl dark:shadow-none rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[170px] text-[12px] no-select">
+        <div id="conv-ctx-archive" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
             <i class="fa-solid fa-box-archive text-slate-400 text-[11px] w-3"></i> <span data-i18n="common.archive">Archiver</span>
         </div>
-        <div id="conv-ctx-delete" class="px-4 py-2.5 hover:bg-red-50 cursor-pointer flex items-center gap-2.5 text-red-500">
+        <div id="conv-ctx-delete" class="px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer flex items-center gap-2.5 text-red-500">
             <i class="fa-solid fa-trash text-[11px] w-3"></i> <span data-i18n="common.delete">Supprimer</span>
         </div>
     </div>
 
     <!-- MENU CONTEXTUEL MESSAGE (clic droit / appui long) -->
-    <div id="msg-context-menu" class="hidden fixed z-[120] bg-white shadow-2xl rounded-xl border border-slate-100 py-1.5 min-w-[170px] text-[12px] no-select">
-        <div id="ctx-edit" class="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 text-slate-700">
+    <div id="msg-context-menu" class="hidden fixed z-[120] bg-white dark:bg-slate-800 shadow-2xl dark:shadow-none rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[170px] text-[12px] no-select">
+        <div id="ctx-edit" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
             <i class="fa-solid fa-pen text-slate-400 text-[11px] w-3"></i> <span data-i18n="common.edit">Modifier</span>
         </div>
-        <div id="ctx-copy" class="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 text-slate-700">
+        <div id="ctx-copy" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
             <i class="fa-solid fa-copy text-slate-400 text-[11px] w-3"></i> <span data-i18n="common.copy">Copier</span>
         </div>
-        <div id="ctx-delete" class="px-4 py-2.5 hover:bg-red-50 cursor-pointer flex items-center gap-2.5 text-red-500">
+        <div id="ctx-delete" class="px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer flex items-center gap-2.5 text-red-500">
             <i class="fa-solid fa-trash text-[11px] w-3"></i> <span data-i18n="common.delete">Supprimer</span>
         </div>
     </div>
 
     <!-- BARRE GAUCHE (PC) -->
-    <aside class="hidden md:flex w-[68px] flex-col items-center py-6 border-r border-slate-200 bg-white flex-shrink-0">
+    <aside class="hidden md:flex w-[68px] flex-col items-center py-6 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex-shrink-0">
         <div class="space-y-7 flex flex-col items-center flex-1">
             <div class="text-blue-600 text-2xl mb-2"><i class="fa-regular fa-comment-dots"></i></div>
-            <a href="chat.html" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100"><i class="fa-solid fa-message text-sm"></i></a>
-            <div class="text-slate-300 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
-            <a href="users.html" class="text-slate-300 hover:text-blue-600 text-lg"><i class="fa-solid fa-user-group"></i></a>
-            <a href="archiver.html" class="text-slate-300 hover:text-blue-600 text-lg"><i class="fa-solid fa-box-archive"></i></a>
+            <a href="chat.html" class="bg-blue-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-100 dark:shadow-none"><i class="fa-solid fa-message text-sm"></i></a>
+            <div class="text-slate-300 dark:text-slate-600 hover:text-blue-600 cursor-pointer text-lg"><i class="fa-solid fa-phone"></i></div>
+            <a href="users.html" class="text-slate-300 dark:text-slate-600 hover:text-blue-600 text-lg"><i class="fa-solid fa-user-group"></i></a>
+            <a href="archiver.html" class="text-slate-300 dark:text-slate-600 hover:text-blue-600 text-lg"><i class="fa-solid fa-box-archive"></i></a>
         </div>
-        <a id="gear-btn" href="profile.html" class="text-slate-300 hover:text-blue-600 text-lg mb-2"><i class="fa-solid fa-gear"></i></a>
+        <a id="gear-btn" href="profile.html" class="text-slate-300 dark:text-slate-600 hover:text-blue-600 text-lg mb-2"><i class="fa-solid fa-gear"></i></a>
     </aside>
 
     <!-- SIDEBAR DISCUSSIONS (MILIEU) -->
-    <aside id="sidebar-mid" class="flex-1 md:w-80 md:flex-none border-r border-slate-200 flex flex-col flex-shrink-0 bg-white relative">
+    <aside id="sidebar-mid" class="flex-1 md:w-80 md:flex-none border-r border-slate-200 dark:border-slate-700 flex flex-col flex-shrink-0 bg-white dark:bg-slate-900 relative">
         <div class="p-4 flex justify-between items-center">
             <div class="flex items-center gap-2.5">
                 <img id="user-avatar-img" class="w-9 h-9 rounded-full border border-slate-100 object-cover bg-slate-100">
-                <h3 id="user-fullname-display" data-i18n="common.loading" class="font-bold text-slate-800 text-[12px]">Chargement...</h3>
+                <h3 id="user-fullname-display" data-i18n="common.loading" class="font-bold text-slate-800 dark:text-slate-100 text-[12px]">Chargement...</h3>
             </div>
         </div>
         <div class="px-4 mb-3">
             <div class="relative">
                 <i id="search-btn" class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-xs cursor-pointer"></i>
-                <input type="text" id="search-input" data-i18n-placeholder="chat.searchPlaceholder" placeholder="Search conversations..." class="w-full bg-slate-50 border-none rounded-lg py-2 pl-9 pr-4 text-[11px] outline-none">
+                <input type="text" id="search-input" data-i18n-placeholder="chat.searchPlaceholder" placeholder="Search conversations..." class="w-full bg-slate-50 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 border-none rounded-lg py-2 pl-9 pr-4 text-[11px] outline-none">
             </div>
         </div>
         <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar pb-20 md:pb-0 no-select"></div>
 
         <!-- NAVIGATION MOBILE -->
-        <nav id="mobile-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-center py-3 z-50">
+        <nav id="mobile-nav" class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-around items-center py-3 z-50">
             <a href="chat.html" class="flex flex-col items-center text-blue-600">
                     <i class="fa-solid fa-message text-xl"></i>
                 <span data-i18n="nav.chats" class="text-[10px] font-bold mt-1">Chats</span>
@@ -115,25 +115,25 @@
     </aside>
 
     <!-- FENÊTRE DE CHAT (DROITE) -->
-    <main id="chat-window" class="hidden md:flex flex-1 flex-col bg-white">
+    <main id="chat-window" class="hidden md:flex flex-1 flex-col bg-white dark:bg-slate-900">
 
         <!-- ÉCRAN D'ACCUEIL (aucune conversation sélectionnée) -->
         <div id="chat-empty-state" class="flex-1 flex flex-col items-center justify-center text-center px-8">
             <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-5">
                 <i class="fa-regular fa-comments text-3xl"></i>
             </div>
-            <h2 data-i18n="chat.emptyTitle" class="text-lg font-bold text-slate-800 mb-2">Bienvenue dans votre messagerie</h2>
-            <p data-i18n="chat.emptySubtitle" class="text-[12px] text-slate-400 max-w-xs">Sélectionnez une conversation ou recherchez un utilisateur pour commencer à discuter.</p>
+            <h2 data-i18n="chat.emptyTitle" class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Bienvenue dans votre messagerie</h2>
+            <p data-i18n="chat.emptySubtitle" class="text-[12px] text-slate-400 dark:text-slate-500 max-w-xs">Sélectionnez une conversation ou recherchez un utilisateur pour commencer à discuter.</p>
         </div>
 
         <!-- CONVERSATION OUVERTE -->
         <div id="chat-content" class="hidden flex-1 flex-col min-h-0">
-        <header class="p-3 border-b border-slate-100 flex justify-between items-center bg-white h-[65px]">
+        <header class="p-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 h-[65px]">
             <div class="flex items-center gap-3">
                 <button id="back-to-list" class="md:hidden text-blue-600 pr-2"><i class="fa-solid fa-chevron-left text-xl"></i></button>
                 <div id="chat-contact-avatar" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px] uppercase"><span id="contact-initials">?</span></div>
                 <div>
-                    <h3 id="chat-contact-name" data-i18n="chat.selectContact" class="font-bold text-slate-800 text-xs text-blue-600">Sélectionnez un contact</h3>
+                    <h3 id="chat-contact-name" data-i18n="chat.selectContact" class="font-bold text-slate-800 dark:text-slate-100 text-xs text-blue-600">Sélectionnez un contact</h3>
                     <div class="flex items-center gap-1.5">
                         <span id="online-dot" class="w-1.5 h-1.5 bg-slate-300 rounded-full transition-colors duration-500"></span>
                         <span id="chat-contact-status" data-i18n="chat.offline" class="text-[9px] text-slate-400 font-medium">Offline</span>
@@ -149,11 +149,11 @@
                 <!-- Menu 3 points : uniquement sur mobile, regroupe Archiver + Supprimer -->
                 <div class="relative md:hidden">
                     <i id="header-more-btn" class="fa-solid fa-ellipsis-vertical text-sm cursor-pointer hover:text-blue-500"></i>
-                    <div id="header-more-menu" class="hidden absolute right-0 top-6 bg-white shadow-2xl rounded-xl border border-slate-100 py-1.5 min-w-[160px] text-[12px] z-50 no-select">
-                        <div id="header-more-archive" class="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center gap-2.5 text-slate-700">
+                    <div id="header-more-menu" class="hidden absolute right-0 top-6 bg-white dark:bg-slate-800 shadow-2xl dark:shadow-none rounded-xl border border-slate-100 dark:border-slate-700 py-1.5 min-w-[160px] text-[12px] z-50 no-select">
+                        <div id="header-more-archive" class="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
                             <i class="fa-solid fa-box-archive text-slate-400 text-[11px] w-3"></i> <span data-i18n="common.archive">Archiver</span>
                         </div>
-                        <div id="header-more-delete" class="px-4 py-2.5 hover:bg-red-50 cursor-pointer flex items-center gap-2.5 text-red-500">
+                        <div id="header-more-delete" class="px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer flex items-center gap-2.5 text-red-500">
                             <i class="fa-solid fa-trash text-[11px] w-3"></i> <span data-i18n="common.delete">Supprimer</span>
                         </div>
                     </div>
@@ -161,10 +161,10 @@
             </div>
         </header>
 
-        <div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-5 bg-white custom-scrollbar"></div>
+        <div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-5 bg-white dark:bg-slate-900 custom-scrollbar"></div>
 
-        <div class="p-4 pb-14 md:pb-4 bg-white border-t border-slate-50">
-            <div class="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+        <div class="p-4 pb-14 md:pb-4 bg-white dark:bg-slate-900 border-t border-slate-50 dark:border-slate-800">
+            <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700">
                 <div class="flex items-center gap-3 pl-2 text-slate-400">
                     <i class="fa-solid fa-circle-plus text-xl cursor-pointer hover:text-blue-600"></i>
                     <i class="fa-regular fa-face-smile text-xl cursor-pointer hover:text-blue-600"></i>
