@@ -1,5 +1,6 @@
-const API_URL = 'https://kadea-chat-api.onrender.com/auth/register';
-const API_KEY = 'wksp_4dfecb20c70ac622983ae8356d95ff8a';
+import { apiRequest } from './api.js';
+
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
 
 // --- 2. SÉLECTEURS UI ---
 const UI = {
@@ -18,46 +19,43 @@ const UI = {
     }
 };
 
-// Règles du mot de passe : au moins 8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial
-const PASSWORD_RULES = [
-    { test: (pwd) => pwd.length >= 8, message: "Le mot de passe doit contenir au moins 8 caractères." },
-    { test: (pwd) => /[A-Z]/.test(pwd), message: "Le mot de passe doit contenir au moins une majuscule." },
-    { test: (pwd) => /[0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un chiffre." },
-    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), message: "Le mot de passe doit contenir au moins un caractère spécial." }
-];
-
 // Format email standard : quelquechose@domaine.extension
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const validateForm = (data) => {
     if (!data.fullName || !data.email || !data.password || !data.confirmPassword) {
-        return "Veuillez remplir tous les champs.";
+        return t('register.fillAllFields');
     }
 
     if (!EMAIL_REGEX.test(data.email)) {
-        return "Adresse email invalide (exemple attendu : nom@domaine.com).";
+        return t('register.invalidEmail');
     }
 
     if (data.password !== data.confirmPassword) {
-        return "Les mots de passe ne correspondent pas.";
+        return t('register.passwordMismatch');
     }
 
+    // Règles du mot de passe : au moins 8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial
+    const PASSWORD_RULES = [
+        { test: (pwd) => pwd.length >= 8, key: 'pwd.rule8' },
+        { test: (pwd) => /[A-Z]/.test(pwd), key: 'pwd.ruleUpper' },
+        { test: (pwd) => /[0-9]/.test(pwd), key: 'pwd.ruleDigit' },
+        { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), key: 'pwd.ruleSpecial' }
+    ];
     const failedRule = PASSWORD_RULES.find(rule => !rule.test(data.password));
-    if (failedRule) return failedRule.message;
+    if (failedRule) return t(failedRule.key);
 
     return null;
 };
 
 //  SERVICES API 
 const registerUser = async (userData) => {
-    const response = await fetch(API_URL, {
+    const apiResult = await apiRequest('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
         body: JSON.stringify(userData)
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Erreur lors de l'inscription");
-    return data;
+    if (!apiResult.status) throw new Error(apiResult.body.message || t('register.defaultError'));
+    return apiResult.body;
 };
 
 
@@ -76,7 +74,9 @@ const displayStatus = (msg, isSuccess = false) => {
 
 const setLoading = (state) => {
     UI.button.disabled = state;
-    UI.button.innerHTML = state ? '<i class="fas fa-spinner fa-spin"></i> Traitement...' : "Create Account";
+    UI.button.innerHTML = state
+        ? `<i class="fas fa-spinner fa-spin"></i> ${t('register.loadingLabel')}`
+        : `<span data-i18n="register.button">${t('register.button')}</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
     UI.button.style.opacity = state ? "0.7" : "1";
 };
 
@@ -98,7 +98,7 @@ const toggleVisibility = (inputElement, iconElement) => {
 const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const formData = {
+    const formData = { // je reupère les saisies 
         fullName: UI.inputs.name.value.trim(),
         email: UI.inputs.email.value.trim(),
         password: UI.inputs.pass.value,
@@ -114,12 +114,12 @@ const handleSubmit = async (event) => {
 
         await registerUser(formData);
         
-        // FeedBack Succès Vert
-        displayStatus("Compte créé avec succès ! Redirection...", true);
+        // FeedBack Succès 
+        displayStatus(t('register.success'), true);
         
         setTimeout(() => {
             window.location.href = 'login.html';
-        }, 2000); // 2 secondes pour lire le message
+        }, 1500); // 1,5 secondes pour lire le message
 
     } catch (err) {
         displayStatus(err.message);

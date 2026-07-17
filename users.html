@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
-    <script src="js/theme.js"></script>
+    <script>document.documentElement.classList.toggle('dark', (localStorage.getItem('theme') || 'light') === 'dark');</script>
+    <script src="js/i18n.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Kadea Chat - Communauté</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Inter', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .modal-animate { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -37,12 +38,12 @@
     <main class="flex-1 flex flex-col bg-white dark:bg-slate-900 overflow-hidden relative">
         
         <!-- Header & Recherche -->
-        <div class="p-4 border-b border-slate-50 dark:border-slate-800">
-            <h1 class="text-xl font-extrabold text-slate-800 dark:text-slate-100 mb-4">Communauté</h1>
+        <div class="p-4 border-b border-slate-50">
+            <h1 data-i18n="users.title" class="text-xl font-extrabold text-slate-800 dark:text-slate-100 mb-4">Communauté</h1>
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm"></i>
-                <input type="text" id="user-search" placeholder="Rechercher un apprenant..." 
-                       class="w-full bg-slate-100 dark:bg-slate-800 dark:text-slate-100 border-none rounded-2xl py-3 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all dark:placeholder-slate-500">
+                <input type="text" id="user-search" data-i18n-placeholder="users.searchPlaceholder" placeholder="Rechercher un apprenant..." 
+                       class="w-full bg-slate-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500 border-none rounded-2xl py-3 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all">
             </div>
         </div>
 
@@ -50,20 +51,20 @@
             
             <!-- SECTION 1 : RÉCEMMENT ACTIFS (Horizontal) -->
             <section class="py-6">
-                <h2 class="px-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Récemment actifs</h2>
+                <h2 data-i18n="users.recentActive" class="px-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Récemment actifs</h2>
                 <div id="recent-users" class="flex gap-5 px-5 overflow-x-auto no-scrollbar">
                     <!-- Rempli par JS -->
                     <div class="animate-pulse flex flex-col items-center gap-2">
-                        <div class="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-full"></div>
-                        <div class="w-10 h-2 bg-slate-100 dark:bg-slate-800 rounded"></div>
+                        <div class="w-14 h-14 bg-slate-100 rounded-full"></div>
+                        <div class="w-10 h-2 bg-slate-100 rounded"></div>
                     </div>
                 </div>
             </section>
 
             <!-- SECTION 2 : TOUS LES MEMBRES (Vertical) -->
             <section class="mt-2">
-                <h2 class="px-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tous les membres</h2>
-                <div id="all-users-list" class="divide-y divide-slate-50 dark:divide-slate-800">
+                <h2 data-i18n="users.allMembers" class="px-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tous les membres</h2>
+                <div id="all-users-list" class="divide-y divide-slate-50">
                     <!-- Rempli par JS avec séparateurs A, B, C... -->
                 </div>
             </section>
@@ -74,16 +75,16 @@
         <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-around items-center py-3 z-50">
             <a href="chat.html" class="flex flex-col items-center text-slate-400">
                 <i class="fa-solid fa-message text-xl"></i>
-                <span class="text-[10px] mt-1">Discussions</span>
+                <span data-i18n="nav.chats" class="text-[10px] mt-1">Discussions</span>
             </a>
-            <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-phone text-xl"></i><span class="text-[10px] mt-1">Appels</span></div>
+            <div class="flex flex-col items-center text-slate-400"><i class="fa-solid fa-phone text-xl"></i><span data-i18n="nav.calls" class="text-[10px] mt-1">Appels</span></div>
             <a href="users.html" class="flex flex-col items-center text-blue-600">
                 <i class="fa-solid fa-user-group text-xl"></i>
-                <span class="text-[10px] font-bold mt-1">Communauté</span>
+                <span data-i18n="nav.community" class="text-[10px] font-bold mt-1">Communauté</span>
             </a>
             <a href="profile.html" class="flex flex-col items-center text-slate-400">
                 <i class="fa-solid fa-gear text-xl"></i>
-                <span class="text-[10px] mt-1">Profil</span>
+                <span data-i18n="nav.profile" class="text-[10px] mt-1">Profil</span>
             </a>
         </nav>
     </main>

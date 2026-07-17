@@ -1,7 +1,9 @@
 // --- CONFIGURATION ---
-const API_URL = "https://kadea-chat-api.onrender.com";
-const API_KEY = "wksp_4dfecb20c70ac622983ae8356d95ff8a";
+import { apiRequest } from './api.js';
+import { applyAvatarByIds, resolveAvatarUrl } from './avatar.js';
 const TOKEN = localStorage.getItem('token');
+
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
 
 let currentUserData = null;
 
@@ -14,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEditProfileModal();
     initChangePasswordModal();
     initLogoutModal();
+    initDeleteAccountModal();
     initAvatarModal();
 });
 
@@ -44,23 +47,39 @@ function showToast(message, type = 'error') {
     }, 3000);
 }
 
-// --- PRÉFÉRENCES LOCALES (l'API ne gère ni l'email affiché, ni le téléphone) ---
+function setButtonLoading(button, loading, label) {
+    label = label || t('common.loading');
+    if (!button) return;
+    if (loading) {
+        button.dataset.originalHtml = button.innerHTML;
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.classList.add('opacity-70', 'cursor-wait');
+        button.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>${label}`;
+    } else {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.classList.remove('opacity-70', 'cursor-wait');
+        if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
+    }
+}
 
-function getProfileOverrides() {
-    try { return JSON.parse(localStorage.getItem('profileOverrides') || '{}'); }
+// --- PRÉFÉRENCES LOCALES SCOPÉES PAR UTILISATEUR ---
+// (l'API ne gère pas l'email affiché différemment de l'email de connexion,
+//  donc on le garde en local — mais lié à l'id de l'utilisateur pour éviter
+//  qu'un autre compte connecté sur ce même navigateur n'hérite de ces données)
+
+function getProfileOverrides(userId) {
+    try { return JSON.parse(localStorage.getItem(`profileOverrides_${userId}`) || '{}'); }
     catch { return {}; }
 }
 
-function setProfileOverrides(partial) {
-    const current = getProfileOverrides();
+function setProfileOverrides(userId, partial) {
+    const current = getProfileOverrides(userId);
     Object.keys(partial).forEach(key => {
         if (partial[key]) current[key] = partial[key];
     });
-    localStorage.setItem('profileOverrides', JSON.stringify(current));
-}
-
-function getMyAvatarUrl(apiAvatarUrl) {
-    return localStorage.getItem('myAvatarUrl') || apiAvatarUrl || 'https://i.pravatar.cc/150?u=me';
+    localStorage.setItem(`profileOverrides_${userId}`, JSON.stringify(current));
 }
 
 // --- THÈME (mode sombre / clair) ---
@@ -73,7 +92,7 @@ function applyTheme(theme) {
         icon.classList.toggle('fa-moon', theme !== 'dark');
         icon.classList.toggle('fa-sun', theme === 'dark');
     }
-    if (label) label.textContent = theme === 'dark' ? 'Mode clair' : 'Mode sombre';
+    if (label) label.textContent = theme === 'dark' ? t('profile.themeToggleLight') : t('profile.themeToggleDark');
 }
 
 function initTheme() {
@@ -84,37 +103,36 @@ function initTheme() {
 
 async function loadFullProfile() {
     try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-            headers: { 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` }
-        });
-        const result = await response.json();
+        const apiResult = await apiRequest('/auth/me');
+        const result = apiResult.body;
 
-        if (response.ok && result.data?.user) {
+        if (apiResult.status && result.data?.user) {
             const user = result.data.user;
             currentUserData = user;
+            const userId = user.id || user._id;
             if (user && user.fullName) {
-                localStorage.setItem('myFullName', user.fullName);
+                localStorage.setItem(`myFullName_${userId}`, user.fullName);
+                localStorage.setItem('lastUserId', userId);
             }
-            const overrides = getProfileOverrides();
+            const overrides = getProfileOverrides(userId);
 
             document.getElementById('profile-name').textContent = user.fullName;
             document.getElementById('profile-email').textContent = overrides.email || user.email;
             document.getElementById('detail-username').textContent = user.fullName.toLowerCase().replace(/\s/g, '_');
-            document.getElementById('detail-phone').textContent = overrides.phone || "Non renseigné";
+            document.getElementById('detail-phone').textContent = user.bio || t('profile.notProvided');
 
-            const avatarUrl = getMyAvatarUrl(user.avatarUrl);
-            document.getElementById('user-avatar-img').src = avatarUrl;
-            document.getElementById('avatar-preview-img').src = avatarUrl;
+            const avatarUrl = resolveAvatarUrl(userId, user.avatarUrl, user.fullName);
+            applyAvatarByIds(['user-avatar-img', 'avatar-preview-img'], avatarUrl);
 
             const date = new Date(user.createdAt);
             const formattedDate = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-            document.getElementById('member-since').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Member since ${escapeHtml(formattedDate)}`;
+            document.getElementById('member-since').innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${t('profile.memberSince')} ${escapeHtml(formattedDate)}`;
         } else {
-            showToast("Impossible de charger votre profil.", 'error');
+            showToast(t('profile.profileLoadError'), 'error');
         }
     } catch (err) {
         console.error("Erreur profil:", err);
-        showToast("Erreur réseau : profil indisponible.", 'error');
+        showToast(t('profile.networkError'), 'error');
     }
 }
 
@@ -129,7 +147,12 @@ function initHeaderMenu() {
         e.stopPropagation();
         moreMenu.classList.toggle('hidden');
     };
-    document.addEventListener('click', () => moreMenu.classList.add('hidden'));
+    // Ferme le menu si on clique EN DEHORS, MAIS pas si on clique sur le <select> de langue
+    document.addEventListener('click', (e) => {
+        if (!moreMenu.contains(e.target) && e.target !== moreBtn) {
+            moreMenu.classList.add('hidden');
+        }
+    });
 
     document.getElementById('theme-toggle-btn').onclick = () => {
         const current = localStorage.getItem('theme') || 'light';
@@ -138,6 +161,16 @@ function initHeaderMenu() {
         applyTheme(next);
         moreMenu.classList.add('hidden');
     };
+
+    // Mettre à jour le libellé de langue dans la carte profil
+    _updateLanguageLabel();
+}
+
+function _updateLanguageLabel() {
+    const el = document.getElementById('detail-language');
+    if (!el) return;
+    const lang = localStorage.getItem('lang') || 'fr';
+    el.textContent = lang === 'fr' ? t('lang.french') : t('lang.english');
 }
 
 // --- MODAL : MODIFIER LE PROFIL ---
@@ -146,103 +179,100 @@ function initEditProfileModal() {
     const modal = document.getElementById('edit-profile-modal');
 
     document.getElementById('edit-profile-btn').onclick = () => {
-        const overrides = getProfileOverrides();
+        const userId = currentUserData?.id || currentUserData?._id;
+        const overrides = getProfileOverrides(userId);
         document.getElementById('edit-fullname').value = currentUserData?.fullName || '';
         document.getElementById('edit-email').value = overrides.email || currentUserData?.email || '';
-        document.getElementById('edit-phone').value = overrides.phone || '';
+        document.getElementById('edit-phone').value = currentUserData?.bio || '';
         modal.classList.remove('hidden');
     };
     document.getElementById('cancel-edit-profile-btn').onclick = () => modal.classList.add('hidden');
 
     document.getElementById('save-profile-btn').onclick = async () => {
+        const saveButton = document.getElementById('save-profile-btn');
         const fullName = document.getElementById('edit-fullname').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
+        const userId = currentUserData?.id || currentUserData?._id;
 
-        if (!fullName) { showToast("Le nom complet est requis.", 'error'); return; }
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast("Adresse email invalide.", 'error'); return; }
+        if (!fullName) { showToast(t('profile.fullNameRequired'), 'error'); return; }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast(t('profile.invalidEmail'), 'error'); return; }
 
         try {
-            const res = await fetch(`${API_URL}/users/me`, {
+            setButtonLoading(saveButton, true, t('common.save') + '...');
+            // Le téléphone est stocké côté serveur dans le champ "bio" (documenté par l'API)
+            // => persistant sur tous les appareils, contrairement à un stockage local.
+            const apiResult = await apiRequest('/users/me', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
-                body: JSON.stringify({ fullName })
+                body: JSON.stringify({ fullName, bio: phone })
             });
-            if (!res.ok) throw new Error('Échec de la mise à jour');
+            if (!apiResult.status) throw new Error(t('profile.updateError'));
 
-            setProfileOverrides({ email, phone });
-            showToast('Profil mis à jour.', 'success');
+            // L'email affiché reste local : l'API ne permet pas de changer l'email de connexion.
+            setProfileOverrides(userId, { email });
+            showToast(t('profile.updateSuccess'), 'success');
             modal.classList.add('hidden');
             await loadFullProfile();
         } catch (err) {
             console.error(err);
-            showToast("Impossible de mettre à jour le profil.", 'error');
+            showToast(t('profile.updateError'), 'error');
+        } finally {
+            setButtonLoading(saveButton, false);
         }
     };
 }
 
 // --- MODAL : CHANGER LE MOT DE PASSE ---
 
+// Mêmes règles que sur inscription/réinitialisation : cohérence dans toute l'app
+const PASSWORD_RULES = [
+    { test: (pwd) => pwd.length >= 8, key: 'pwd.rule8' },
+    { test: (pwd) => /[A-Z]/.test(pwd), key: 'pwd.ruleUpper' },
+    { test: (pwd) => /[0-9]/.test(pwd), key: 'pwd.ruleDigit' },
+    { test: (pwd) => /[^A-Za-z0-9]/.test(pwd), key: 'pwd.ruleSpecial' }
+];
+
 function initChangePasswordModal() {
     const modal = document.getElementById('change-password-modal');
-    const step1 = document.getElementById('pwd-step-1');
-    const step2 = document.getElementById('pwd-step-2');
 
-    function resetToStep1() {
-        step2.classList.add('hidden');
-        step1.classList.remove('hidden');
-        document.getElementById('pwd-code').value = '';
+    function resetForm() {
+        document.getElementById('pwd-old').value = '';
         document.getElementById('pwd-new').value = '';
         document.getElementById('pwd-confirm').value = '';
     }
 
     document.getElementById('change-password-btn').onclick = () => {
-        document.getElementById('pwd-target-email').textContent = currentUserData?.email || '';
-        resetToStep1();
+        resetForm();
         modal.classList.remove('hidden');
     };
-    document.getElementById('cancel-pwd-step1-btn').onclick = () => modal.classList.add('hidden');
-    document.getElementById('cancel-pwd-step2-btn').onclick = () => modal.classList.add('hidden');
-
-    document.getElementById('send-code-btn').onclick = async () => {
-        if (!currentUserData?.email) return;
-        try {
-            const res = await fetch(`${API_URL}/auth/forgot-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-                body: JSON.stringify({ email: currentUserData.email })
-            });
-            if (!res.ok) throw new Error('Échec envoi code');
-            showToast('Code envoyé par email.', 'success');
-            step1.classList.add('hidden');
-            step2.classList.remove('hidden');
-        } catch (err) {
-            console.error(err);
-            showToast("Impossible d'envoyer le code.", 'error');
-        }
-    };
+    document.getElementById('cancel-pwd-btn').onclick = () => modal.classList.add('hidden');
 
     document.getElementById('confirm-new-pwd-btn').onclick = async () => {
-        const code = document.getElementById('pwd-code').value.trim();
-        const newPwd = document.getElementById('pwd-new').value;
+        const confirmButton = document.getElementById('confirm-new-pwd-btn');
+        const oldPassword = document.getElementById('pwd-old').value;
+        const newPassword = document.getElementById('pwd-new').value;
         const confirmPwd = document.getElementById('pwd-confirm').value;
 
-        if (!code || code.length !== 6) { showToast("Le code doit contenir 6 chiffres.", 'error'); return; }
-        if (newPwd.length < 6) { showToast("Le mot de passe doit contenir au moins 6 caractères.", 'error'); return; }
-        if (newPwd !== confirmPwd) { showToast("Les mots de passe ne correspondent pas.", 'error'); return; }
+        if (!oldPassword || !newPassword || !confirmPwd) { showToast(t('profile.fillAllFields'), 'error'); return; }
+        if (newPassword !== confirmPwd) { showToast(t('profile.passwordMismatch'), 'error'); return; }
+
+        const failedRule = PASSWORD_RULES.find(rule => !rule.test(newPassword));
+        if (failedRule) { showToast(t(failedRule.key), 'error'); return; }
 
         try {
-            const res = await fetch(`${API_URL}/auth/reset-password`, {
+            setButtonLoading(confirmButton, true, t('common.loading'));
+            const apiResult = await apiRequest('/auth/change-password', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-                body: JSON.stringify({ code, newPassword: newPwd })
+                body: JSON.stringify({ oldPassword, newPassword })
             });
-            if (!res.ok) throw new Error('Échec réinitialisation');
-            showToast('Mot de passe modifié avec succès.', 'success');
+            if (!apiResult.status) throw new Error(apiResult.body?.message || t('profile.wrongOldPassword'));
+            showToast(t('profile.passwordChanged'), 'success');
             modal.classList.add('hidden');
         } catch (err) {
             console.error(err);
-            showToast("Code invalide ou expiré.", 'error');
+            showToast(err.message || t('profile.wrongOldPassword'), 'error');
+        } finally {
+            setButtonLoading(confirmButton, false);
         }
     };
 }
@@ -268,6 +298,50 @@ function initLogoutModal() {
     };
 }
 
+function clearDeletedAccountData(userId) {
+    [
+        'token', 'user', 'lastUserId', 'autoOpenConvId', 'autoOpenConvName',
+        'archivedConversationIds', 'resetPasswordEmail',
+        `myAvatarUrl_${userId}`, `myFullName_${userId}`, `profileOverrides_${userId}`
+    ].forEach(key => localStorage.removeItem(key));
+}
+
+function initDeleteAccountModal() {
+    const modal = document.getElementById('delete-account-modal');
+    const confirmation = document.getElementById('delete-account-confirmation');
+    const confirmButton = document.getElementById('confirm-delete-account-btn');
+
+    document.getElementById('delete-account-btn').onclick = () => {
+        confirmation.value = '';
+        modal.classList.remove('hidden');
+        confirmation.focus();
+    };
+    document.getElementById('cancel-delete-account-btn').onclick = () => modal.classList.add('hidden');
+    modal.addEventListener('click', event => { if (event.target === modal) modal.classList.add('hidden'); });
+
+    confirmButton.onclick = async () => {
+        if (confirmation.value.trim().toUpperCase() !== t('profile.confirmWord')) {
+            showToast(t('profile.typeDeleteToConfirm'), 'error');
+            confirmation.focus();
+            return;
+        }
+
+        try {
+            setButtonLoading(confirmButton, true, t('profile.deleteAccountConfirm') + '...');
+            const apiResult = await apiRequest('/users/me', { method: 'DELETE' });
+            if (!apiResult.status) throw new Error(apiResult.body?.message || t('profile.deleteAccountError'));
+
+            const userId = currentUserData?.id || currentUserData?._id;
+            clearDeletedAccountData(userId);
+            window.location.href = 'index.html';
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || t('profile.deleteAccountError'), 'error');
+            setButtonLoading(confirmButton, false);
+        }
+    };
+}
+
 // --- MODAL : PHOTO DE PROFIL (style WhatsApp) ---
 
 function initAvatarModal() {
@@ -283,27 +357,27 @@ function initAvatarModal() {
     fileInput.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        const userId = currentUserData?.id || currentUserData?._id;
         try {
             const dataUrl = await resizeImageToDataUrl(file, 300);
-            localStorage.setItem('myAvatarUrl', dataUrl);
+            localStorage.setItem(`myAvatarUrl_${userId}`, dataUrl);
             document.getElementById('user-avatar-img').src = dataUrl;
             document.getElementById('avatar-preview-img').src = dataUrl;
-            showToast('Photo de profil mise à jour.', 'success');
+            showToast(t('profile.avatarUpdated'), 'success');
 
             // Tentative de sauvegarde côté serveur (champ documenté par l'API)
             try {
-                const res = await fetch(`${API_URL}/users/me`, {
+                const apiResult = await apiRequest('/users/me', {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'Authorization': `Bearer ${TOKEN}` },
                     body: JSON.stringify({ avatarUrl: dataUrl })
                 });
-                if (!res.ok) console.warn("Le serveur n'a pas accepté la photo (probablement trop volumineuse) — elle reste sauvegardée sur cet appareil.");
+                if (!apiResult.status) console.warn("Le serveur n'a pas accepté la photo (probablement trop volumineuse) — elle reste sauvegardée sur cet appareil.");
             } catch (err) {
                 console.warn("Sauvegarde serveur de la photo impossible, conservée localement uniquement.", err);
             }
         } catch (err) {
             console.error(err);
-            showToast("Impossible de charger cette image.", 'error');
+            showToast(t('profile.avatarError'), 'error');
         }
     };
 }

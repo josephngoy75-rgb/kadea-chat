@@ -1,5 +1,6 @@
-const API_URL = 'https://kadea-chat-api.onrender.com/auth/forgot-password';
-const API_KEY = 'wksp_4dfecb20c70ac622983ae8356d95ff8a';
+import { apiRequest } from './api.js';
+
+const t = (key, vars) => window.KadeaI18n.t(key, vars);
 
 const UI = {
     form: document.getElementById('forgotForm'),
@@ -22,26 +23,26 @@ const displayStatus = (msg, isSuccess = false) => {
 
 const setLoading = (state) => {
     UI.button.disabled = state;
-    UI.button.innerHTML = state ? '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...' : "Envoyer le code";
+    UI.button.innerHTML = state
+        ? `<i class="fas fa-spinner fa-spin"></i> ${t('forgot.loadingLabel')}`
+        : `<span data-i18n="forgot.button">${t('forgot.button')}</span>`;
 };
 
 const sendResetCode = async (email) => {
-    const response = await fetch(API_URL, {
+    const apiResult = await apiRequest('/auth/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
         body: JSON.stringify({ email })
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Impossible d'envoyer le code.");
-    return data;
+    if (!apiResult.status) throw new Error(apiResult.body.message || t('forgot.sendError'));
+    return apiResult.body;
 };
 
 const handleSubmit = async (e) => {
     e.preventDefault();
     const email = UI.email.value.trim();
 
-    if (!email) return displayStatus("Veuillez entrer votre adresse email.");
-    if (!EMAIL_REGEX.test(email)) return displayStatus("Adresse email invalide.");
+    if (!email) return displayStatus(t('forgot.emailRequired'));
+    if (!EMAIL_REGEX.test(email)) return displayStatus(t('forgot.invalidEmail'));
 
     try {
         setLoading(true);
@@ -54,13 +55,13 @@ const handleSubmit = async (e) => {
         localStorage.setItem('resetPasswordEmail', email);
 
         // Certaines API de test renvoient directement le code dans la réponse
-        // quand aucun service d'envoi d'email n'est réellement configuré.
+        // aucun service d'envoi d'email n'est réellement configuré.
         const debugCode = result?.data?.code || result?.data?.resetCode || result?.code;
 
         if (debugCode) {
-            displayStatus(`Code généré : ${debugCode} (aucun email requis). Redirection...`, true);
+            displayStatus(t('forgot.codeGenerated', { code: debugCode }), true);
         } else {
-            displayStatus(result?.message || "Code envoyé ! Vérifiez votre boîte mail (et vos spams). Redirection...", true);
+            displayStatus(result?.message || t('forgot.codeSentDefault'), true);
         }
 
         setTimeout(() => {
