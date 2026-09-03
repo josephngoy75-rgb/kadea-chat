@@ -126,31 +126,22 @@ function renderAlphabeticalList(users) {
     container.innerHTML = "";
 
     const sorted = [...users].sort((a, b) => a.fullName.localeCompare(b.fullName));
-    let lastLetter = "";
-
     sorted.forEach(u => {
-        const currentLetter = u.fullName.charAt(0).toUpperCase();
         const statusColor = u.isOnline ? 'bg-green-500' : 'bg-slate-300';
-
-        if (currentLetter !== lastLetter) {
-            lastLetter = currentLetter;
-            container.insertAdjacentHTML('beforeend', `
-                <div class="bg-slate-50/50 dark:bg-slate-800/50 px-5 py-2 text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">${escapeHtml(currentLetter)}</div>
-            `);
-        }
 
         container.insertAdjacentHTML('beforeend', `
             <div onclick="startChat('${u.id || u._id}', '${String(u.fullName).replace(/'/g, "\\'")}')" 
-                 class="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border-b border-slate-50 dark:border-slate-800">
-                <div class="relative">
-                    <img src="${resolveAvatarUrl(u.id || u._id, u.avatarUrl, u.fullName)}" alt="${escapeHtml(u.fullName)}" class="w-10 h-10 rounded-full object-cover bg-slate-100 dark:bg-slate-800">
-                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 ${statusColor} border-2 border-white dark:border-slate-900 rounded-full"></span>
+                 class="flex items-center gap-3.5 pl-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+                <div class="relative py-2.5">
+                    <img src="${resolveAvatarUrl(u.id || u._id, u.avatarUrl, u.fullName)}" alt="${escapeHtml(u.fullName)}" class="w-12 h-12 rounded-full object-cover bg-slate-100 dark:bg-slate-800">
+                    <span class="absolute bottom-2.5 right-0 w-3 h-3 ${statusColor} border-2 border-white dark:border-slate-900 rounded-full"></span>
                 </div>
-                <div class="flex-1">
-                    <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm">${escapeHtml(u.fullName)}</h4>
-                    <p class="text-[10px] ${u.isOnline ? 'text-green-500 font-bold' : 'text-slate-400'}">${ u.isOnline ? t('users.online') : t('users.offline')}</p>
+                <div class="flex-1 flex items-center justify-between py-3.5 pr-5 border-b border-slate-100 dark:border-slate-800/60">
+                    <div>
+                        <h4 class="font-semibold text-slate-900 dark:text-slate-100 text-[15px] leading-tight">${escapeHtml(u.fullName)}</h4>
+                        <p class="text-[13px] mt-0.5 ${u.isOnline ? 'text-green-500 font-medium' : 'text-slate-500'}">${ u.isOnline ? t('users.online') : t('users.offline')}</p>
+                    </div>
                 </div>
-                <i class="fa-solid fa-chevron-right text-[10px] text-slate-200 dark:text-slate-600"></i>
             </div>
         `);
     });
