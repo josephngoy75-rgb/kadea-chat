@@ -144,14 +144,16 @@ function renderArchivedList(conversations) {
         container.insertAdjacentHTML('beforeend', `
             <div onclick="window.openArchivedConversation('${id}', '${name.replace(/'/g, "\\'")}')" 
                  data-conv-id="${id}" data-conv-name="${name.replace(/"/g, '&quot;')}"
-                 class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border-b border-slate-50 dark:border-slate-800">
-                <img src="${resolveAvatarUrl(otherId, otherAvatar, name)}" alt="${safeName}" class="w-10 h-10 rounded-full object-cover bg-blue-100 dark:bg-blue-900/30">
-                <div class="flex-1 min-w-0">
+                 class="conv-item flex items-center gap-3.5 pl-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+                <div class="relative py-2.5">
+                    <img src="${resolveAvatarUrl(otherId, otherAvatar, name)}" alt="${safeName}" class="w-12 h-12 rounded-full object-cover bg-blue-100 dark:bg-blue-900/30">
+                </div>
+                <div class="flex-1 min-w-0 py-3.5 pr-5 border-b border-slate-100 dark:border-slate-800/60">
                     <div class="flex justify-between items-baseline mb-0.5">
-                        <h4 class="font-bold text-slate-800 dark:text-slate-100 text-[12px] truncate">${safeName}</h4>
-                        <span class="text-[9px] text-slate-400">${timeStr}</span>
+                        <h4 class="font-semibold text-slate-900 dark:text-slate-100 text-[15px] leading-tight truncate">${safeName}</h4>
+                        <span class="text-[11px] text-slate-400 font-medium">${timeStr}</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 truncate">${escapeHtml(lastMsg)}</p>
+                    <p class="text-[13px] text-slate-500 truncate mt-0.5">${escapeHtml(lastMsg)}</p>
                 </div>
             </div>`);
     });
