@@ -1,61 +1,61 @@
 /**
- * KADEA CHAT — Thème global et Anti-FOUC (Flash of Unstyled Content)
+ * KADEA CHAT — Thème global et Anti-FOUC
  * Inclus dans le <head> de TOUTES les pages.
  */
-
 (function () {
-    // 1. Appliquer immédiatement le thème pour éviter le fond blanc
+    // 1. Appliquer immédiatement le thème (avant parsing du body) pour éviter le flash blanc/noir
     const theme = localStorage.getItem('theme') || 'light';
-    if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', theme === 'dark');
 
-    // 2. Désactiver temporairement les transitions CSS au chargement initial
-    // pour éviter l'animation de changement de couleur (ex: transition-colors)
-    const style = document.createElement('style');
-    style.textContent = '*, *::before, *::after { transition: none !important; }';
-    document.head.appendChild(style);
+    // 2. Bloquer toutes les transitions au chargement initial (évite l'animation de couleur)
+    const noTransition = document.createElement('style');
+    noTransition.id = '_no-transition';
+    noTransition.textContent = '*, *::before, *::after { transition: none !important; animation-duration: 0ms !important; }';
+    document.head.appendChild(noTransition);
 
-    // Réactiver les transitions une fois la page peinte
-    window.addEventListener('load', () => {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                document.head.removeChild(style);
+    // Réactiver les transitions après deux frames (page entièrement peinte)
+    window.addEventListener('load', function () {
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                const el = document.getElementById('_no-transition');
+                if (el) el.remove();
             });
         });
     });
 
-    // 3. Appliquer immédiatement les données de profil stockées (Avatar, Nom)
-    // dès que le DOM est prêt (avant même que fetch(/auth/me) ne réponde).
-    // Ces données sont scopées par "lastUserId" (mémorisé à la dernière connexion réussie)
-    // pour éviter qu'un autre compte connecté sur ce même navigateur n'en hérite.
-    document.addEventListener('DOMContentLoaded', () => {
+    // 3. Injecter avatar + nom INSTANTANÉMENT depuis le cache local
+    //    On cache les images avec opacity:0 pour éviter d'afficher l'avatar par défaut,
+    //    puis on les révèle après avoir appliqué le bon src.
+    document.addEventListener('DOMContentLoaded', function () {
         const lastUserId = localStorage.getItem('lastUserId');
         if (!lastUserId) return;
 
-        // Appliquer l'avatar local
-        const storedAvatar = localStorage.getItem(`myAvatarUrl_${lastUserId}`);
-        if (storedAvatar) {
-            const avatarIds = ['user-avatar-img', 'avatar-preview-img'];
-            avatarIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.src = storedAvatar;
-            });
-        }
+        // --- AVATAR ---
+        const storedAvatar = localStorage.getItem('myAvatarUrl_' + lastUserId);
+        const avatarIds = ['user-avatar-img', 'avatar-preview-img'];
+        avatarIds.forEach(function (id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (storedAvatar) {
+                // Masquer le temps de basculer le src, puis révéler
+                el.style.opacity = '0';
+                el.src = storedAvatar;
+                el.onload = function () { el.style.opacity = '1'; };
+                el.onerror = function () { el.style.opacity = '1'; }; // Révèle même en cas d'erreur
+            } else {
+                // Pas de cache : ne rien mettre (évite l'avatar générique "pravatar")
+                el.style.opacity = '0';
+            }
+        });
 
-        // Appliquer le nom local
-        const storedName = localStorage.getItem(`myFullName_${lastUserId}`);
+        // --- NOM ---
+        const storedName = localStorage.getItem('myFullName_' + lastUserId);
         if (storedName) {
-            const nameDisplays = ['user-fullname-display', 'profile-name'];
-            nameDisplays.forEach(id => {
-                const el = document.getElementById(id);
-                if (el && (el.textContent.trim() === 'Chargement...' || el.textContent.trim() === '')) {
-                    el.textContent = storedName;
-                }
+            var nameIds = ['user-fullname-display', 'profile-name'];
+            nameIds.forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = storedName;
             });
         }
     });
-
 })();

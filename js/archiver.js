@@ -1,5 +1,6 @@
 // --- 1. CONFIGURATION ---
 import { apiRequest } from './api.js';
+import { resolveAvatarUrl } from './avatar.js';
 
 const t = (key, vars) => window.KadeaI18n.t(key, vars);
 const TOKEN = localStorage.getItem('token');
@@ -137,12 +138,14 @@ function renderArchivedList(conversations) {
         const date = conv.lastMessage ? new Date(conv.lastMessage.createdAt) : new Date(conv.createdAt);
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const safeName = escapeHtml(name);
+        const otherAvatar = other ? (other.user?.avatarUrl || other.avatarUrl) : null;
+        const otherId = other ? (other.user?.id || other.user?._id || other.id || other._id || other.userId) : null;
 
         container.insertAdjacentHTML('beforeend', `
             <div onclick="window.openArchivedConversation('${id}', '${name.replace(/'/g, "\\'")}')" 
                  data-conv-id="${id}" data-conv-name="${name.replace(/"/g, '&quot;')}"
                  class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border-b border-slate-50 dark:border-slate-800">
-                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs uppercase">${String(name).substring(0, 2)}</div>
+                <img src="${resolveAvatarUrl(otherId, otherAvatar, name)}" alt="${safeName}" class="w-10 h-10 rounded-full object-cover bg-blue-100 dark:bg-blue-900/30">
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline mb-0.5">
                         <h4 class="font-bold text-slate-800 dark:text-slate-100 text-[12px] truncate">${safeName}</h4>

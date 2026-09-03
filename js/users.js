@@ -4,6 +4,7 @@
  */
 
 import { apiRequest } from './api.js';
+import { resolveAvatarUrl } from './avatar.js';
 
 const t = (key, vars) => window.KadeaI18n.t(key, vars);
 const TOKEN = localStorage.getItem('token');
@@ -109,9 +110,7 @@ function renderRecentActive(users) {
             <div onclick="startChat('${u.id || u._id}', '${String(u.fullName).replace(/'/g, "\\'")}')" 
                  class="flex flex-col items-center gap-2 cursor-pointer flex-shrink-0 transition-transform active:scale-90">
                 <div class="relative">
-                    <div class="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/30 border-2 border-white dark:border-slate-700 shadow-sm dark:shadow-none flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm uppercase">
-                        ${escapeHtml((u.fullName || "??").substring(0, 2))}
-                    </div>
+                    <img src="${resolveAvatarUrl(u.id || u._id, u.avatarUrl, u.fullName)}" alt="${safeName}" class="w-14 h-14 rounded-full border-2 border-white dark:border-slate-700 shadow-sm dark:shadow-none object-cover bg-blue-50 dark:bg-blue-900/30">
                     <span class="absolute bottom-0.5 right-0.5 w-4 h-4 ${statusColor} border-2 border-white dark:border-slate-900 rounded-full"></span>
                 </div>
                 <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 w-16 truncate text-center">${escapeHtml(u.fullName.split(' ')[0])}</span>
@@ -144,9 +143,7 @@ function renderAlphabeticalList(users) {
             <div onclick="startChat('${u.id || u._id}', '${String(u.fullName).replace(/'/g, "\\'")}')" 
                  class="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border-b border-slate-50 dark:border-slate-800">
                 <div class="relative">
-                    <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-xs uppercase">
-                        ${escapeHtml((u.fullName || "??").substring(0, 2))}
-                    </div>
+                    <img src="${resolveAvatarUrl(u.id || u._id, u.avatarUrl, u.fullName)}" alt="${escapeHtml(u.fullName)}" class="w-10 h-10 rounded-full object-cover bg-slate-100 dark:bg-slate-800">
                     <span class="absolute bottom-0 right-0 w-2.5 h-2.5 ${statusColor} border-2 border-white dark:border-slate-900 rounded-full"></span>
                 </div>
                 <div class="flex-1">
