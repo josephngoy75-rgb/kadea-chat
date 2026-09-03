@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
-    <script>document.documentElement.classList.toggle('dark', (localStorage.getItem('theme') || 'light') === 'dark');</script>
+    <script src="js/auth-guard.js"></script>
+    <script src="js/theme.js"></script>
     <script src="js/i18n.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Kadea Chat - Premium</title>
@@ -131,7 +132,7 @@
         <header class="p-3 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 h-[65px]">
             <div class="flex items-center gap-3">
                 <button id="back-to-list" class="md:hidden text-blue-600 pr-2"><i class="fa-solid fa-chevron-left text-xl"></i></button>
-                <div id="chat-contact-avatar" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px] uppercase"><span id="contact-initials">?</span></div>
+                <img id="chat-contact-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full object-cover bg-slate-100 dark:bg-slate-800">
                 <div>
                     <h3 id="chat-contact-name" data-i18n="chat.selectContact" class="font-bold text-slate-800 dark:text-slate-100 text-xs text-blue-600">Sélectionnez un contact</h3>
                     <div class="flex items-center gap-1.5">
@@ -145,6 +146,8 @@
                 <i id="header-call-btn" class="fa-solid fa-phone text-sm cursor-pointer hover:text-blue-500"></i>
                 <i id="header-archive-btn" class="fa-solid fa-box-archive text-sm cursor-pointer hover:text-blue-500 hidden md:block"></i>
                 <i id="header-delete-btn" class="fa-solid fa-trash-can text-sm hover:text-red-500 cursor-pointer transition-colors hidden md:block"></i>
+                <!-- Bouton recherche dans les messages -->
+                <i id="header-msg-search-btn" class="fa-solid fa-magnifying-glass text-sm cursor-pointer hover:text-blue-500"></i>
 
                 <!-- Menu 3 points : uniquement sur mobile, regroupe Archiver + Supprimer -->
                 <div class="relative md:hidden">
@@ -160,6 +163,13 @@
                 </div>
             </div>
         </header>
+
+        <!-- BARRE DE RECHERCHE DANS LES MESSAGES (masquée par défaut) -->
+        <div id="msg-search-bar" class="hidden items-center gap-2 px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <i class="fa-solid fa-magnifying-glass text-slate-300 text-xs"></i>
+            <input id="msg-search-input" type="text" data-i18n-placeholder="chat.searchMessagesPlaceholder" placeholder="Rechercher dans les messages..." class="flex-1 bg-transparent text-[12px] outline-none dark:text-slate-100 dark:placeholder-slate-500">
+            <button id="msg-search-close" class="text-slate-300 hover:text-slate-500 text-xs"><i class="fa-solid fa-xmark"></i></button>
+        </div>
 
         <div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-5 bg-white dark:bg-slate-900 custom-scrollbar"></div>
 

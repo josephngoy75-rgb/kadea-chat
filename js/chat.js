@@ -130,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initMessageContextMenu();
     initConvContextMenu();
+    initMsgSearch();
 
     // REFRESH AUTO
     setInterval(() => { 
@@ -246,7 +247,20 @@ window.openConversation = async function(convId, title) {
     }
     
     document.getElementById('chat-contact-name').textContent = title;
-    document.getElementById('contact-initials').textContent = String(title).substring(0, 2).toUpperCase();
+    
+    // Essayer de trouver l'avatar dans le cache immédiatement pour éviter le délai
+    const existing = cachedConversations.find(conv => String(conv.id || conv._id) === String(convId));
+    let otherTemp = null;
+    if (existing) {
+        const myId = String(currentUser.id || currentUser._id);
+        otherTemp = existing.participants?.find(p => String(p.userId || p.id || p._id) !== myId);
+        // Sometimes nested under .user
+        if (otherTemp && !otherTemp.avatarUrl && otherTemp.user) {
+            otherTemp = otherTemp.user;
+        }
+    }
+    const avatarUrl = resolveAvatarUrl(otherTemp ? (otherTemp.id || otherTemp._id) : null, otherTemp ? otherTemp.avatarUrl : null, title);
+    document.getElementById('chat-contact-avatar').src = avatarUrl;
 
     try {
         const apiResult = await apiRequest(`/conversations/${convId}`);
@@ -255,6 +269,12 @@ window.openConversation = async function(convId, title) {
             const myId = String(currentUser.id || currentUser._id);
             const other = result.data.participants?.find(p => String(p.id || p._id) !== myId);
             updateOnlineStatus(other ? other.isOnline : false);
+            
+            // Mise à jour de l'avatar au cas où il aurait changé
+            if (other) {
+                document.getElementById('chat-contact-avatar').src = resolveAvatarUrl(other.id || other._id, other.avatarUrl, title);
+            }
+            
             renderMessages(result.data.messages || []);
             document.getElementById('message-input').focus(); // curseur direct dans le champ de saisie
         } else {
@@ -328,11 +348,14 @@ function renderConversations(conversations) {
         const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         const safeName = escapeHtml(name);
+        const otherAvatar = other ? (other.user?.avatarUrl || other.avatarUrl) : null;
+        const otherId = other ? (other.user?.id || other.user?._id || other.id || other._id || other.userId) : null;
+        
         container.insertAdjacentHTML('beforeend', `
             <div onclick="window.openConversation('${id}', '${name.replace(/'/g, "\\'")}')" 
                  data-conv-id="${id}" data-conv-name="${name.replace(/"/g, '&quot;')}"
                  class="conv-item flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border-b border-slate-50 dark:border-slate-800 ${activeConversationId === id ? 'bg-slate-50 dark:bg-slate-800 border-l-4 border-blue-600' : ''}">
-                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs uppercase">${String(name).substring(0, 2)}</div>
+                <img src="${resolveAvatarUrl(otherId, otherAvatar, name)}" alt="${safeName}" class="w-10 h-10 rounded-full object-cover bg-blue-100 dark:bg-blue-900/30">
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-baseline mb-0.5">
                         <h4 class="font-bold text-slate-800 dark:text-slate-100 text-[12px] truncate">${safeName}</h4>
@@ -370,10 +393,72 @@ async function triggerSearch(query) {
             container.innerHTML = `<div class="p-3 text-[9px] font-bold text-blue-600 uppercase bg-blue-50/30 dark:bg-blue-900/20">${t('chat.searchResults')}</div>`;
             found.forEach(u => {
                 const safeName = String(u.fullName).replace(/'/g, "\\'");
-                container.insertAdjacentHTML('beforeend', `<div onclick="window.createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-50 dark:border-slate-800"><div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase">${String(u.fullName).substring(0,2)}</div><h4 class="font-bold text-slate-800 dark:text-slate-100 text-[11px]">${u.fullName}</h4></div>`);
+                container.insertAdjacentHTML('beforeend', `<div onclick="window.createNewConversation('${u.id || u._id}', '${safeName}')" class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-50 dark:border-slate-800"><img src="${resolveAvatarUrl(u.id || u._id, u.avatarUrl, u.fullName)}" alt="${escapeHtml(u.fullName)}" class="w-8 h-8 rounded-full object-cover bg-slate-200 dark:bg-slate-700"><h4 class="font-bold text-slate-800 dark:text-slate-100 text-[11px]">${u.fullName}</h4></div>`);
             });
         }
     } catch (err) { console.error(err); }
+}
+
+// --- RECHERCHE DANS LES MESSAGES ---
+function initMsgSearch() {
+    const searchBtn = document.getElementById('header-msg-search-btn');
+    const searchBar = document.getElementById('msg-search-bar');
+    const searchInput = document.getElementById('msg-search-input');
+    const closeBtn = document.getElementById('msg-search-close');
+    if (!searchBtn || !searchBar || !searchInput) return;
+
+    searchBtn.onclick = () => {
+        searchBar.classList.remove('hidden');
+        searchBar.classList.add('flex');
+        searchInput.focus();
+    };
+
+    closeBtn.onclick = () => {
+        searchBar.classList.add('hidden');
+        searchBar.classList.remove('flex');
+        searchInput.value = '';
+        clearMessageHighlights();
+    };
+
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        if (!query) { clearMessageHighlights(); return; }
+        filterMessages(query);
+    });
+}
+
+function filterMessages(query) {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
+    const bubbles = container.querySelectorAll('[data-message-id]');
+    let firstMatch = null;
+    bubbles.forEach(bubble => {
+        const textEl = bubble.querySelector('.msg-text');
+        if (!textEl) return;
+        const text = textEl.textContent.toLowerCase();
+        if (text.includes(query)) {
+            bubble.style.display = '';
+            if (!firstMatch) firstMatch = bubble;
+            // Surligner le terme recherché
+            const original = textEl.textContent;
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            textEl.innerHTML = escapeHtml(original).replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-700 rounded px-0.5">$1</mark>');
+        } else {
+            bubble.style.display = 'none';
+        }
+    });
+    if (firstMatch) firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function clearMessageHighlights() {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
+    const bubbles = container.querySelectorAll('[data-message-id]');
+    bubbles.forEach(bubble => {
+        bubble.style.display = '';
+        const textEl = bubble.querySelector('.msg-text');
+        if (textEl) textEl.textContent = textEl.textContent; // Supprime les <mark>
+    });
 }
 
 window.openDeleteModal = (mode = 'conversation', targetId = null) => {
